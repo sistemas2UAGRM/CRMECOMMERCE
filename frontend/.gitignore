@@ -1,0 +1,14 @@
+# ===========================
+# FRONTEND - REGLAS ESPECÍFICAS
+# ===========================
+
+# Aquí puedes agregar reglas específicas para tu frontend
+# Por ejemplo, si usas React, Vue, Angular, etc.
+
+# Ejemplo para Node.js/React/Vue:
+# node_modules/
+# build/
+# dist/
+# .next/
+# .nuxt/
+# .cache/
