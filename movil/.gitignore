@@ -1,0 +1,25 @@
+# ===========================
+# MÓVIL - REGLAS ESPECÍFICAS
+# ===========================
+
+# Aquí puedes agregar reglas específicas para tu aplicación móvil
+# Por ejemplo, si usas React Native, Flutter, Ionic, etc.
+
+# Ejemplo para React Native:
+# node_modules/
+# .expo/
+# .expo-shared/
+# *.jks
+# *.p8
+# *.p12
+# *.key
+# *.mobileprovision
+
+# Ejemplo para Flutter:
+# .dart_tool/
+# .flutter-plugins
+# .flutter-plugins-dependencies
+# .packages
+# .pub-cache/
+# .pub/
+# build/
