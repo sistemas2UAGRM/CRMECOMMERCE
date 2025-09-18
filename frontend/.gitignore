@@ -1,14 +1,24 @@
-# ===========================
-# FRONTEND - REGLAS ESPECÍFICAS
-# ===========================
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Aquí puedes agregar reglas específicas para tu frontend
-# Por ejemplo, si usas React, Vue, Angular, etc.
+node_modules
+dist
+dist-ssr
+*.local
 
-# Ejemplo para Node.js/React/Vue:
-# node_modules/
-# build/
-# dist/
-# .next/
-# .nuxt/
-# .cache/
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
