@@ -78,6 +78,7 @@ export default function Carrito() {
           </div>
         )}
       </div>
+      <div></div>
     </section>
   );
 }
