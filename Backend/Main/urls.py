@@ -22,12 +22,39 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="CREM & E-COMMERCE API",
+        title="CRM & E-COMMERCE API - Sprint 1",
         default_version='v1',
-        description="Documentacion de la api",
+        description="""
+        ## 🚀 API REST Completa para Sistema CRM+Ecommerce
+        
+        ### **Módulos Implementados:**
+        - 👥 **USUARIOS**: Autenticación JWT, perfiles, búsquedas
+        - 🔐 **CRM**: Roles jerárquicos, permisos granulares
+        - 📊 **BITÁCORA**: Auditoría automática, estadísticas
+        - 🛍️ **E-COMMERCE**: Catálogo, carritos, gestión de stock
+        
+        ### **Autenticación:**
+        1. Hacer login en `/api/v1/users/login/`
+        2. Copiar el `access_token` 
+        3. Hacer clic en **"Authorize"** 🔒
+        4. Introducir: `Bearer tu_token_aquí`
+        
+        ### **Roles del Sistema:**
+        - 🔴 **Administrador**: Acceso total
+        - 🟡 **Supervisor** (empleadonivel1): Gestión de equipo
+        - 🟢 **Vendedor** (empleadonivel2): Operaciones de venta  
+        - 🔵 **Cliente**: Acceso básico
+        """,
+        terms_of_service="https://tu-empresa.com/terms/",
+        contact=openapi.Contact(email="admin@empresa.com", name="Soporte API"),
+        license=openapi.License(name="MIT License"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
+    authentication_classes=[],
+    patterns=[
+        path('api/v1/', include('api.v1.urls')),
+    ],
 )
 
 urlpatterns = [
