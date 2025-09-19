@@ -1,13 +1,13 @@
 # api/v1/ecommerce/urls.py
 
 """
-📚 MICROCONCEPTOS - URLs PARA E-COMMERCE
+📚 URLS MODULARES PARA E-COMMERCE
 
-Estructura de URLs para el módulo de e-commerce:
+Estructura de URLs para el módulo de e-commerce refactorizado:
 
 1. CATÁLOGO: /productos/, /categorias/
 2. CARRITOS: /carritos/, /carritos/mi-carrito/
-3. FILTROS: /productos/por-estado/, /productos/stats/
+3. INVENTARIO: /inventario/stats/, /inventario/stock-bajo/
 4. RELACIONES: /categorias/{id}/productos/
 
 Casos de uso implementados: CU-E01 al CU-E13 (Sprint 1)
@@ -15,22 +15,26 @@ Casos de uso implementados: CU-E01 al CU-E13 (Sprint 1)
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (
-    CategoriaViewSet, ProductoViewSet, CarritoViewSet, ResumenEstadosView
-)
 
-# Router para ViewSets
+# Importar views modulares
+from .views import (
+    CategoriaViewSet, ProductoViewSet, CarritoViewSet
+)
+from .views.inventory_views import InventoryStatsView, LowStockProductsView
+
+# Router para ViewSets principales
 router = DefaultRouter()
 router.register(r'categorias', CategoriaViewSet, basename='categoria')
-router.register(r'productos', ProductoViewSet, basename='producto')
+router.register(r'productos', ProductoViewSet, basename='producto') 
 router.register(r'carritos', CarritoViewSet, basename='carrito')
 
 urlpatterns = [
-    # ViewSet URLs
+    # ViewSet URLs principales
     path('', include(router.urls)),
     
-    # Endpoints específicos
-    path('productos/por-estado/resumen/', ResumenEstadosView.as_view(), name='productos-estado-resumen'),
+    # URLs específicas de inventario
+    path('inventario/stats/', InventoryStatsView.as_view(), name='inventario-stats'),
+    path('inventario/stock-bajo/', LowStockProductsView.as_view(), name='inventario-stock-bajo'),
 ]
 
 """

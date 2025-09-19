@@ -19,6 +19,7 @@ Para relaciones Many-to-Many:
 
 from rest_framework import serializers
 from django.contrib.auth.models import Group, Permission
+from django.db import models
 from core.crm.models import RolExtendido, PermisoExtendido
 from core.users.models import User
 
@@ -259,11 +260,11 @@ class AssignRoleSerializer(serializers.Serializer):
             
         return value
         
-    def validate(self, data):
+    def validate(self, attrs):
         """Validaciones adicionales"""
         # Aquí podríamos agregar validaciones de negocio
         # Por ejemplo, verificar que el usuario puede asignar estos roles
-        return data
+        return attrs
 
 
 class UserRoleAssignmentSerializer(serializers.Serializer):
@@ -331,3 +332,165 @@ class UsersByRoleSerializer(serializers.Serializer):
             }
             for user in usuarios
         ]
+
+
+# === SERIALIZERS PARA PERMISOS ===
+
+class PermissionSerializer(serializers.ModelSerializer):
+    """
+    Serializer básico para permisos del sistema Django
+    """
+    content_type_name = serializers.CharField(source='content_type.name', read_only=True)
+    app_label = serializers.CharField(source='content_type.app_label', read_only=True)
+    model = serializers.CharField(source='content_type.model', read_only=True)
+    
+    class Meta:
+        model = Permission
+        fields = ['id', 'name', 'codename', 'content_type_name', 'app_label', 'model']
+
+
+class PermissionDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer detallado para permisos con información completa
+    """
+    content_type_info = serializers.SerializerMethodField()
+    usage_stats = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Permission
+        fields = ['id', 'name', 'codename', 'content_type_info', 'usage_stats']
+    
+    def get_content_type_info(self, obj):
+        """Información completa del content type"""
+        return {
+            'id': obj.content_type.id,
+            'name': obj.content_type.name,
+            'app_label': obj.content_type.app_label,
+            'model': obj.content_type.model
+        }
+    
+    def get_usage_stats(self, obj):
+        """Estadísticas de uso del permiso"""
+        try:
+            # Contar cuántos grupos tienen este permiso
+            groups_count = obj.group_set.count()
+            # Contar cuántos usuarios tienen este permiso (directa o indirectamente)
+            users_with_permission = User.objects.filter(
+                models.Q(user_permissions=obj) | 
+                models.Q(groups__permissions=obj)
+            ).distinct().count()
+            
+            return {
+                'groups_count': groups_count,
+                'users_with_permission': users_with_permission
+            }
+        except:
+            return {'groups_count': 0, 'users_with_permission': 0}
+
+
+# === SERIALIZERS PARA OPERACIONES EN LOTE ===
+
+class BulkUserRoleSerializer(serializers.Serializer):
+    """
+    Serializer para operaciones masivas de asignación de roles
+    """
+    user_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        min_length=1,
+        help_text="Lista de IDs de usuarios"
+    )
+    role_id = serializers.IntegerField(help_text="ID del rol a asignar/desasignar")
+    
+    def validate_user_ids(self, value):
+        """Validar que todos los user_ids existan"""
+        existing_users = User.objects.filter(id__in=value).values_list('id', flat=True)
+        non_existing = set(value) - set(existing_users)
+        
+        if non_existing:
+            raise serializers.ValidationError(
+                f"Los siguientes IDs de usuario no existen: {list(non_existing)}"
+            )
+        
+        return value
+    
+    def validate_role_id(self, value):
+        """Validar que el rol exista"""
+        try:
+            RolExtendido.objects.get(id=value)
+        except RolExtendido.DoesNotExist:
+            raise serializers.ValidationError("El rol especificado no existe")
+        
+        return value
+
+
+class UserRolesSerializer(serializers.Serializer):
+    """
+    Serializer para mostrar todos los roles de un usuario
+    """
+    user_info = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
+    
+    def get_user_info(self, obj):
+        """Información básica del usuario"""
+        return {
+            'id': obj.id,
+            'username': obj.username,
+            'email': obj.email,
+            'full_name': f"{obj.first_name} {obj.last_name}".strip(),
+            'is_active': obj.is_active
+        }
+    
+    def get_roles(self, obj):
+        """Lista de roles del usuario"""
+        roles_data = []
+        for group in obj.groups.all():
+            try:
+                rol_extendido = RolExtendido.objects.get(group=group)
+                roles_data.append({
+                    'id': rol_extendido.id,
+                    'name': group.name,
+                    'description': rol_extendido.descripcion,
+                    'permissions_count': group.permissions.count()
+                })
+            except RolExtendido.DoesNotExist:
+                # Grupo sin extensión CRM
+                roles_data.append({
+                    'id': None,
+                    'name': group.name,
+                    'description': 'Grupo de Django estándar',
+                    'permissions_count': group.permissions.count()
+                })
+        
+        return roles_data
+
+
+class RoleUsersSerializer(serializers.Serializer):
+    """
+    Serializer para mostrar todos los usuarios de un rol
+    """
+    role_info = serializers.SerializerMethodField()
+    users = serializers.SerializerMethodField()
+    
+    def get_role_info(self, obj):
+        """Información básica del rol"""
+        return {
+            'id': obj.id,
+            'name': obj.group.name,
+            'description': obj.descripcion,
+            'permissions_count': obj.group.permissions.count()
+        }
+    
+    def get_users(self, obj):
+        """Lista de usuarios con este rol"""
+        users_data = []
+        for user in obj.group.user_set.all():
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'full_name': f"{user.first_name} {user.last_name}".strip(),
+                'is_active': user.is_active,
+                'last_login': user.last_login
+            })
+        
+        return users_data

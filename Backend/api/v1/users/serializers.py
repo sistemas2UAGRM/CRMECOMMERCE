@@ -17,7 +17,7 @@ Tipos principales:
 
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from core.users.models import User
@@ -241,7 +241,7 @@ class AdminUserRegistrationSerializer(serializers.ModelSerializer):
     
     password = serializers.CharField(write_only=True, required=False)
     rol = serializers.ChoiceField(
-        choices=['cliente', 'empleadonivel1', 'empleadonivel2'],
+        choices=['administrador', 'empleadonivel1', 'empleadonivel2', 'cliente'],
         write_only=True
     )
     send_welcome_email = serializers.BooleanField(default=True, write_only=True)
@@ -262,7 +262,7 @@ class AdminUserRegistrationSerializer(serializers.ModelSerializer):
         
     def validate_rol(self, value):
         """Validar que el rol sea válido"""
-        valid_roles = ['cliente', 'empleadonivel1', 'empleadonivel2']
+        valid_roles = ['administrador', 'empleadonivel1', 'empleadonivel2', 'cliente']
         if value not in valid_roles:
             raise serializers.ValidationError(f"Rol debe ser uno de: {valid_roles}")
         return value
@@ -287,6 +287,28 @@ class AdminUserRegistrationSerializer(serializers.ModelSerializer):
         group, created = Group.objects.get_or_create(name=rol)
         user.groups.add(group)
         
+        # Si es administrador, asignar TODOS los permisos
+        if rol == 'administrador':
+            # Hacer superusuario para acceso completo
+            user.is_staff = True
+            user.is_superuser = True
+            user.is_active = True  # Asegurar que esté activo
+            user.save()
+            
+            # Asignar todos los permisos disponibles
+            all_permissions = Permission.objects.all()
+            group.permissions.set(all_permissions)
+            
+            print(f"✅ Usuario administrador creado: {user.username}")
+            print(f"   - is_staff: {user.is_staff}")
+            print(f"   - is_superuser: {user.is_superuser}")
+            print(f"   - is_active: {user.is_active}")
+            
+        elif rol == 'empleadonivel1':
+            # Supervisor: permisos de gestión pero no de administración total
+            user.is_staff = True
+            user.save()
+            
         # Marcar que debe cambiar contraseña
         # user.profile.debe_cambiar_password = True
         # user.profile.save()
@@ -298,9 +320,10 @@ class AdminUserRegistrationSerializer(serializers.ModelSerializer):
         grupo = obj.groups.first()
         if grupo:
             descriptions = {
-                'cliente': 'Cliente con acceso básico',
+                'administrador': 'Administrador con acceso total al sistema',
                 'empleadonivel1': 'Supervisor con permisos de gestión',
-                'empleadonivel2': 'Vendedor con permisos de venta'
+                'empleadonivel2': 'Vendedor con permisos de venta',
+                'cliente': 'Cliente con acceso básico'
             }
             return {
                 'id': grupo.id,

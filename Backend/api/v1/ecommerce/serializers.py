@@ -435,6 +435,7 @@ class ProductoEstadoSerializer(serializers.ModelSerializer):
     
     categoria = serializers.CharField(source='categoria.nombre', read_only=True)
     estado = serializers.SerializerMethodField()
+    stock_actual = serializers.SerializerMethodField()
     
     class Meta:
         model = Producto

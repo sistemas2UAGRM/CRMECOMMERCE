@@ -18,29 +18,26 @@ Consideraciones de seguridad:
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    RolViewSet, PermisoViewSet, AssignRoleView, UsersByRoleView
+    RolViewSet, PermissionViewSet, UserRoleViewSet
 )
 
 # Router para ViewSets
 router = DefaultRouter()
 router.register(r'roles', RolViewSet, basename='rol')
-router.register(r'permisos', PermisoViewSet, basename='permiso')
+router.register(r'permissions', PermissionViewSet, basename='permission')
+router.register(r'user-roles', UserRoleViewSet, basename='user-role')
 
 urlpatterns = [
     # ViewSet URLs
     path('', include(router.urls)),
-    
-    # Endpoints específicos para operaciones complejas
-    path('assign-role/<int:user_id>/', AssignRoleView.as_view(), name='assign-role'),
-    path('users-by-role/<str:role_name>/', UsersByRoleView.as_view(), name='users-by-role'),
 ]
 
 """
-📝 MICROCONCEPTO: URLs generadas para CRM
+📝 MICROCONCEPTO: URLs modulares para CRM
 
-Router genera automáticamente:
+Router genera automáticamente estas URLs:
 
-Gestión de Roles:
+=== GESTIÓN DE ROLES ===
 - GET /api/v1/crm/roles/ -> RolViewSet.list()
 - POST /api/v1/crm/roles/ -> RolViewSet.create()
 - GET /api/v1/crm/roles/{id}/ -> RolViewSet.retrieve()
@@ -48,20 +45,37 @@ Gestión de Roles:
 - DELETE /api/v1/crm/roles/{id}/ -> RolViewSet.destroy()
 
 Acciones personalizadas de roles:
-- GET/PUT /api/v1/crm/roles/{id}/permissions/ -> RolViewSet.permissions()
+- GET /api/v1/crm/roles/{id}/permissions/ -> RolViewSet.permissions()
+- POST /api/v1/crm/roles/{id}/assign_permissions/ -> RolViewSet.assign_permissions()
 - GET /api/v1/crm/roles/{id}/users/ -> RolViewSet.users()
+- GET /api/v1/crm/roles/search/?q=query -> RolViewSet.search()
+- GET /api/v1/crm/roles/stats/ -> RolViewSet.stats()
 
-Gestión de Permisos (solo lectura):
-- GET /api/v1/crm/permisos/ -> PermisoViewSet.list()
-- GET /api/v1/crm/permisos/{id}/ -> PermisoViewSet.retrieve()
+=== GESTIÓN DE PERMISOS (Solo lectura) ===
+- GET /api/v1/crm/permissions/ -> PermissionViewSet.list()
+- GET /api/v1/crm/permissions/{id}/ -> PermissionViewSet.retrieve()
 
-Operaciones específicas:
-- POST /api/v1/crm/assign-role/{user_id}/ -> AssignRoleView
-- GET /api/v1/crm/users-by-role/{role_name}/ -> UsersByRoleView
+Acciones personalizadas de permisos:
+- GET /api/v1/crm/permissions/by_app/ -> PermissionViewSet.by_app()
+- GET /api/v1/crm/permissions/by_model/?app_label=&model= -> PermissionViewSet.by_model()
+- GET /api/v1/crm/permissions/search/?q=query -> PermissionViewSet.search()
+- GET /api/v1/crm/permissions/stats/ -> PermissionViewSet.stats()
+- GET /api/v1/crm/permissions/apps/ -> PermissionViewSet.apps()
+- GET /api/v1/crm/permissions/models/?app_label= -> PermissionViewSet.models()
+
+=== GESTIÓN DE ASIGNACIONES USUARIO-ROL ===
+- POST /api/v1/crm/user-roles/assign_role/ -> UserRoleViewSet.assign_role()
+- POST /api/v1/crm/user-roles/remove_role/ -> UserRoleViewSet.remove_role()
+- GET /api/v1/crm/user-roles/user/{user_id}/roles/ -> UserRoleViewSet.user_roles()
+- GET /api/v1/crm/user-roles/role/{role_id}/users/ -> UserRoleViewSet.role_users()
+- POST /api/v1/crm/user-roles/bulk_assign/ -> UserRoleViewSet.bulk_assign()
+- POST /api/v1/crm/user-roles/bulk_remove/ -> UserRoleViewSet.bulk_remove()
+- GET /api/v1/crm/user-roles/stats/ -> UserRoleViewSet.stats()
+- GET /api/v1/crm/user-roles/validate_assignment/?user_id=&role_id= -> UserRoleViewSet.validate_assignment()
 
 Ejemplos de uso:
 - GET /api/v1/crm/roles/1/permissions/ -> Ver permisos del rol 1
-- PUT /api/v1/crm/roles/1/permissions/ -> Actualizar permisos del rol 1
-- POST /api/v1/crm/assign-role/5/ -> Asignar roles al usuario 5
-- GET /api/v1/crm/users-by-role/vendedor/ -> Ver usuarios con rol vendedor
+- POST /api/v1/crm/roles/1/assign_permissions/ -> Asignar permisos al rol 1
+- POST /api/v1/crm/user-roles/assign_role/ -> Asignar rol a usuario
+- GET /api/v1/crm/permissions/by_app/ -> Ver permisos agrupados por aplicación
 """

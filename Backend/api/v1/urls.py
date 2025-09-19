@@ -19,8 +19,12 @@ Estructura de URLs:
 """
 
 from django.urls import path, include
+from .test_views import HealthCheckView
 
 urlpatterns = [
+    # Test endpoint
+    path('health/', HealthCheckView.as_view(), name='health-check'),
+    
     # Módulo de usuarios (autenticación, perfiles, gestión)
     path('users/', include('api.v1.users.urls')),
     
