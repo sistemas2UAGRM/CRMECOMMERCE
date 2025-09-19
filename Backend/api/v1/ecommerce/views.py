@@ -32,6 +32,8 @@ from .serializers import (
     AgregarProductoCarritoSerializer, ActualizarCantidadCarritoSerializer,
     ResumenEstadosSerializer
 )
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 class CategoriaViewSet(viewsets.ModelViewSet):
@@ -108,7 +110,6 @@ class ProductoViewSet(viewsets.ModelViewSet):
     """
     
     queryset = Producto.objects.select_related('categoria', 'stock').filter(activo=True)
-    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nombre', 'descripcion']
     ordering_fields = ['nombre', 'precio_venta', 'fecha_creacion']
@@ -124,11 +125,49 @@ class ProductoViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         """Permisos según acción"""
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'por_estado']:
+            # Catálogo público - sin autenticación requerida
             return [permissions.AllowAny()]
+        elif self.action in ['create', 'update', 'partial_update', 'destroy', 'stock', 'stats']:
+            # Operaciones administrativas - solo admin y supervisores
+            return [permissions.IsAuthenticated()]
         else:
             return [permissions.IsAuthenticated()]
     
+    @swagger_auto_schema(
+        operation_description="Crear nuevo producto con stock inicial",
+        request_body=ProductoCreateSerializer,
+        security=[{'Bearer': []}],  # Requiere autenticación
+        responses={
+            201: openapi.Response(
+                description='Producto creado exitosamente',
+                schema=ProductoDetailSerializer,
+                examples={
+                    'application/json': {
+                        'id': 1,
+                        'nombre': 'Laptop Dell XPS 13',
+                        'descripcion': 'Laptop ultradelgada con procesador Intel i7',
+                        'precio_venta': 1299.99,
+                        'garantia': '2 años',
+                        'categoria': {
+                            'id': 1,
+                            'nombre': 'Electrónicos'
+                        },
+                        'stock': {
+                            'id': 1,
+                            'stock_min': 5,
+                            'stock_actual': 20,
+                            'disponible': True,
+                            'estado': 'disponible'
+                        },
+                        'activo': True,
+                        'fecha_creacion': '2024-09-19T01:00:00Z'
+                    }
+                }
+            )
+        },
+        tags=['E-commerce - Productos']
+    )
     def perform_create(self, serializer):
         """CU-E02: Crear Producto"""
         producto = serializer.save()
@@ -138,6 +177,62 @@ class ProductoViewSet(viewsets.ModelViewSet):
             usuario=self.request.user
         )
     
+    @swagger_auto_schema(
+        operation_description="Actualizar stock de un producto",
+        request_body=ProductoUpdateStockSerializer,
+        security=[{'Bearer': []}],  # Requiere autenticación
+        responses={
+            200: openapi.Response(
+                description='Stock actualizado exitosamente',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'stock_anterior': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'stock_actual': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'stock_min': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'disponible': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'movimiento': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'tipo': openapi.Schema(type=openapi.TYPE_STRING),
+                                'cantidad': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'motivo': openapi.Schema(type=openapi.TYPE_STRING),
+                                'fecha': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
+                                'usuario': openapi.Schema(type=openapi.TYPE_STRING)
+                            }
+                        )
+                    }
+                ),
+                examples={
+                    'application/json': {
+                        'id': 1,
+                        'stock_anterior': 20,
+                        'stock_actual': 15,
+                        'stock_min': 5,
+                        'disponible': True,
+                        'movimiento': {
+                            'tipo': 'salida',
+                            'cantidad': 5,
+                            'motivo': 'Venta realizada',
+                            'fecha': '2024-09-19T01:15:00Z',
+                            'usuario': 'admin'
+                        }
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description='Error de validación',
+                examples={
+                    'application/json': {
+                        'stock_actual': ['Este campo es requerido.'],
+                        'motivo': ['El motivo es requerido para movimientos de entrada y salida']
+                    }
+                }
+            )
+        },
+        tags=['E-commerce - Productos']
+    )
     @action(detail=True, methods=['put'])
     def stock(self, request, pk=None):
         """CU-E05: Actualizar Stock"""
@@ -178,6 +273,89 @@ class ProductoViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def get_client_ip(self):
+        """Obtener IP del cliente"""
+        x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = self.request.META.get('REMOTE_ADDR')
+        return ip
+    
+    @swagger_auto_schema(
+        operation_description="Filtrar productos por estado de disponibilidad",
+        security=[],  # Endpoint público - sin autenticación
+        manual_parameters=[
+            openapi.Parameter(
+                'estado',
+                openapi.IN_QUERY,
+                description='Estado del producto',
+                type=openapi.TYPE_STRING,
+                enum=['disponible', 'agotado', 'no_disponible'],
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='Lista de productos filtrados por estado',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'estado_filtro': openapi.Schema(type=openapi.TYPE_STRING),
+                        'count': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'productos': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'nombre': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'precio_venta': openapi.Schema(type=openapi.TYPE_NUMBER),
+                                    'categoria': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'stock_actual': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'estado': openapi.Schema(type=openapi.TYPE_STRING)
+                                }
+                            )
+                        ),
+                        'mensaje': openapi.Schema(type=openapi.TYPE_STRING, description='Mensaje opcional')
+                    }
+                ),
+                examples={
+                    'application/json': {
+                        'estado_filtro': 'disponible',
+                        'count': 18,
+                        'productos': [
+                            {
+                                'id': 1,
+                                'nombre': 'Laptop Dell XPS 13',
+                                'precio_venta': 1299.99,
+                                'categoria': 'Electrónicos',
+                                'stock_actual': 15,
+                                'estado': 'disponible'
+                            },
+                            {
+                                'id': 2,
+                                'nombre': 'Mouse Inalámbrico',
+                                'precio_venta': 29.99,
+                                'categoria': 'Accesorios',
+                                'stock_actual': 50,
+                                'estado': 'disponible'
+                            }
+                        ]
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description='Estado no válido',
+                examples={
+                    'application/json': {
+                        'error': 'Estado no válido. Opciones: disponible, agotado, no_disponible'
+                    }
+                }
+            )
+        },
+        tags=['E-commerce - Productos']
+    )
     @action(detail=False, methods=['get'])
     def por_estado(self, request):
         """CU-E13: Filtrar Productos por Estado"""

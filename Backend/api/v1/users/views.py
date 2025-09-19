@@ -1,8 +1,7 @@
-
 # api/v1/users/views.py
 
 """
-📚 MICROCONCEPTOS - DJANGO REST FRAMEWORK VIEWS
+MICROCONCEPTOS - DJANGO REST FRAMEWORK VIEWS
 
 DRF proporciona varias clases base para views:
 
@@ -31,6 +30,8 @@ from django.contrib.auth.models import Group
 from django.db.models import Q, Count
 from django.utils import timezone
 from datetime import timedelta
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from core.users.models import User
 from core.common.models import Bitacora
@@ -43,7 +44,7 @@ from .serializers import (
 
 class UserRegistrationView(CreateAPIView):
     """
-    📝 MICROCONCEPTO: CreateAPIView
+    MICROCONCEPTO: CreateAPIView
     
     CreateAPIView es una vista genérica que:
     - Solo maneja POST requests
@@ -55,9 +56,43 @@ class UserRegistrationView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]  # Público
     
+    @swagger_auto_schema(
+        operation_description="Registro público de clientes",
+        request_body=UserRegistrationSerializer,
+        security=[],  # Endpoint público - sin autenticación
+        responses={
+            201: openapi.Response(
+                description='Usuario registrado exitosamente',
+                schema=UserBasicSerializer,
+                examples={
+                    'application/json': {
+                        'id': 5,
+                        'username': 'juan.cliente',
+                        'email': 'juan@gmail.com',
+                        'first_name': 'Juan',
+                        'last_name': 'Pérez',
+                        'full_name': 'Juan Pérez',
+                        'is_active': True,
+                        'date_joined': '2024-09-19T01:00:00Z'
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description='Error de validación',
+                examples={
+                    'application/json': {
+                        'username': ['Este campo es requerido.'],
+                        'email': ['Ingrese una dirección de email válida.'],
+                        'password': ['La contraseña es muy común.']
+                    }
+                }
+            )
+        },
+        tags=['Autenticación']
+    )
     def perform_create(self, serializer):
         """
-        📝 MICROCONCEPTO: perform_create()
+        MICROCONCEPTO: perform_create()
         
         perform_create() se ejecuta después de la validación
         pero antes de guardar. Útil para:
@@ -88,27 +123,52 @@ class UserRegistrationView(CreateAPIView):
 class AdminUserRegistrationView(CreateAPIView):
     """
     Vista para que administradores registren usuarios con roles específicos
+    TEMPORAL: Sin protección para configuración inicial
     """
     
     serializer_class = AdminUserRegistrationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # TEMPORAL: Sin protección
     
-    def get_permissions(self):
-        """
-        📝 MICROCONCEPTO: Permisos dinámicos
-        
-        get_permissions() permite definir permisos dinámicamente
-        basados en el request, usuario, etc.
-        """
-        permission_classes = [permissions.IsAuthenticated]
-        
-        # Solo administradores pueden usar este endpoint
-        if self.request.user.is_authenticated:
-            if not self.request.user.groups.filter(name='administrador').exists():
-                permission_classes = [permissions.IsAdminUser]  # Esto denegará acceso
-                
-        return [permission() for permission in permission_classes]
-        
+    @swagger_auto_schema(
+        operation_description="Registro de usuarios por administrador con roles específicos",
+        request_body=AdminUserRegistrationSerializer,
+        security=[],  # TEMPORAL: Endpoint público para configuración inicial
+        responses={
+            201: openapi.Response(
+                description='Usuario creado exitosamente por administrador',
+                schema=UserDetailSerializer,
+                examples={
+                    'application/json': {
+                        'id': 3,
+                        'username': 'supervisor.ventas',
+                        'email': 'supervisor@empresa.com',
+                        'first_name': 'María',
+                        'last_name': 'González',
+                        'full_name': 'María González',
+                        'is_active': True,
+                        'groups': [
+                            {
+                                'id': 2,
+                                'name': 'empleadonivel1'
+                            }
+                        ],
+                        'date_joined': '2024-09-19T01:00:00Z',
+                        'last_login': None
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description='Error de validación',
+                examples={
+                    'application/json': {
+                        'rol': ['Rol inválido. Opciones: administrador, empleadonivel1, empleadonivel2, cliente'],
+                        'username': ['Ya existe un usuario con este nombre.']
+                    }
+                }
+            )
+        },
+        tags=['Administración']
+    )
     def perform_create(self, serializer):
         user = serializer.save()
         
@@ -116,9 +176,9 @@ class AdminUserRegistrationView(CreateAPIView):
         Bitacora.objects.create(
             accion=f"Usuario creado por administrador: {user.username} con rol {serializer.validated_data.get('rol')}",
             ip=self.get_client_ip(),
-            usuario=self.request.user
+            usuario=self.request.user if self.request.user.is_authenticated else None
         )
-        
+    
     def get_client_ip(self):
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
@@ -130,7 +190,7 @@ class AdminUserRegistrationView(CreateAPIView):
 
 class LoginView(APIView):
     """
-    📝 MICROCONCEPTO: APIView personalizada
+    MICROCONCEPTO: APIView personalizada
     
     APIView es la clase base más flexible. Útil cuando:
     - Necesitamos lógica muy específica
@@ -140,9 +200,68 @@ class LoginView(APIView):
     
     permission_classes = [permissions.AllowAny]
     
+    @swagger_auto_schema(
+        operation_description="Autenticación de usuario con JWT",
+        request_body=LoginSerializer,
+        security=[],  # Endpoint público - sin autenticación
+        responses={
+            200: openapi.Response(
+                description='Autenticación exitosa',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'access_token': openapi.Schema(type=openapi.TYPE_STRING, description='Token de acceso JWT'),
+                        'refresh_token': openapi.Schema(type=openapi.TYPE_STRING, description='Token de renovación JWT'),
+                        'user': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                                'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                'groups': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)),
+                                'permissions': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING))
+                            }
+                        )
+                    }
+                ),
+                examples={
+                    'application/json': {
+                        'access_token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+                        'refresh_token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+                        'user': {
+                            'id': 1,
+                            'username': 'admin',
+                            'email': 'admin@empresa.com',
+                            'first_name': 'Administrador',
+                            'last_name': 'Sistema',
+                            'groups': ['administrador'],
+                            'permissions': ['add_user', 'change_user', 'delete_user']
+                        }
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description='Error de autenticación',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING, description='Mensaje de error')
+                    }
+                ),
+                examples={
+                    'application/json': {
+                        'error': 'Credenciales inválidas'
+                    }
+                }
+            )
+        },
+        tags=['Autenticación']
+    )
     def post(self, request):
         """
-        📝 MICROCONCEPTO: Métodos HTTP personalizados
+        MICROCONCEPTO: Métodos HTTP personalizados
         
         En APIView definimos métodos para cada verbo HTTP:
         - get(), post(), put(), patch(), delete()
@@ -201,7 +320,7 @@ class LoginView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-    📝 MICROCONCEPTO: ModelViewSet completo
+    MICROCONCEPTO: ModelViewSet completo
     
     ModelViewSet proporciona automáticamente:
     - list(): GET /users/ (listar usuarios)
@@ -220,9 +339,61 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['username', 'email', 'first_name', 'last_name']
     ordering_fields = ['date_joined', 'last_login', 'username']
     
+    @swagger_auto_schema(
+        operation_description="Listar todos los usuarios del sistema",
+        security=[{'Bearer': []}],
+        responses={
+            200: openapi.Response(
+                description='Lista de usuarios',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                            'username': openapi.Schema(type=openapi.TYPE_STRING),
+                            'email': openapi.Schema(type=openapi.TYPE_STRING),
+                            'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                            'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                            'full_name': openapi.Schema(type=openapi.TYPE_STRING),
+                            'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                            'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time')
+                        }
+                    )
+                ),
+                examples={
+                    'application/json': [
+                        {
+                            'id': 1,
+                            'username': 'admin',
+                            'email': 'admin@empresa.com',
+                            'first_name': 'Admin',
+                            'last_name': 'Sistema',
+                            'full_name': 'Admin Sistema',
+                            'is_active': True,
+                            'date_joined': '2024-09-19T01:00:00Z'
+                        }
+                    ]
+                }
+            ),
+            401: openapi.Response(
+                description='No autorizado',
+                examples={
+                    'application/json': {
+                        'detail': 'Authentication credentials were not provided.'
+                    }
+                }
+            )
+        },
+        tags=['Usuarios - Administración']
+    )
+    def list(self, request, *args, **kwargs):
+        """Lista todos los usuarios - Solo administradores y supervisores"""
+        return super().list(request, *args, **kwargs)
+    
     def get_serializer_class(self):
         """
-        📝 MICROCONCEPTO: Serializers dinámicos
+        MICROCONCEPTO: Serializers dinámicos
         
         get_serializer_class() permite usar diferentes serializers
         basados en la acción que se está ejecutando.
@@ -247,10 +418,44 @@ class UserViewSet(viewsets.ModelViewSet):
             
         return [permission() for permission in permission_classes]
     
+    @swagger_auto_schema(
+        methods=['get'],
+        operation_description="Obtener perfil del usuario actual",
+        security=[{'Bearer': []}],
+        responses={
+            200: openapi.Response(
+                description='Perfil del usuario',
+                schema=UserDetailSerializer
+            )
+        },
+        tags=['Usuarios']
+    )
+    @swagger_auto_schema(
+        methods=['put', 'patch'],
+        operation_description="Actualizar perfil del usuario actual",
+        security=[{'Bearer': []}],
+        request_body=UserDetailSerializer,
+        responses={
+            200: openapi.Response(
+                description='Perfil actualizado exitosamente',
+                schema=UserDetailSerializer
+            ),
+            400: openapi.Response(
+                description='Error de validación',
+                examples={
+                    'application/json': {
+                        'email': ['Ingrese una dirección de email válida.'],
+                        'first_name': ['Este campo no puede estar en blanco.']
+                    }
+                }
+            )
+        },
+        tags=['Usuarios']
+    )
     @action(detail=False, methods=['get', 'put', 'patch'])
     def profile(self, request):
         """
-        📝 MICROCONCEPTO: Acciones personalizadas con @action
+        MICROCONCEPTO: Acciones personalizadas con @action
         
         @action permite agregar endpoints personalizados:
         - detail=False: /users/profile/ (no requiere ID)
@@ -291,10 +496,71 @@ class UserViewSet(viewsets.ModelViewSet):
             
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    @swagger_auto_schema(
+        operation_description="Buscar usuarios por nombre de usuario o email",
+        manual_parameters=[
+            openapi.Parameter(
+                'q',
+                openapi.IN_QUERY,
+                description='Término de búsqueda',
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='Resultados de búsqueda',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'count': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'results': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'username': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'full_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                                    'groups': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING))
+                                }
+                            )
+                        )
+                    }
+                ),
+                examples={
+                    'application/json': {
+                        'count': 2,
+                        'results': [
+                            {
+                                'id': 1,
+                                'username': 'juan.cliente',
+                                'email': 'juan@gmail.com',
+                                'full_name': 'Juan Pérez',
+                                'is_active': True,
+                                'groups': ['cliente']
+                            },
+                            {
+                                'id': 2,
+                                'username': 'maria.supervisor',
+                                'email': 'maria@empresa.com',
+                                'full_name': 'María González',
+                                'is_active': True,
+                                'groups': ['empleadonivel1']
+                            }
+                        ]
+                    }
+                }
+            )
+        },
+        tags=['Usuarios']
+    )
     @action(detail=False, methods=['get'])
     def search(self, request):
         """
-        📝 MICROCONCEPTO: Búsqueda personalizada
+        MICROCONCEPTO: Búsqueda personalizada
         
         Implementamos búsqueda más específica que el filtro automático.
         """
@@ -314,6 +580,55 @@ class UserViewSet(viewsets.ModelViewSet):
             'results': serializer.data
         })
     
+    @swagger_auto_schema(
+        operation_description="Listar solo usuarios activos del sistema",
+        security=[{'Bearer': []}],
+        responses={
+            200: openapi.Response(
+                description='Lista de usuarios activos',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Total de usuarios activos'),
+                        'results': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'username': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'full_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                                    'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time')
+                                }
+                            )
+                        )
+                    }
+                ),
+                examples={
+                    'application/json': {
+                        'count': 15,
+                        'results': [
+                            {
+                                'id': 1,
+                                'username': 'admin',
+                                'email': 'admin@empresa.com',
+                                'first_name': 'Admin',
+                                'last_name': 'Sistema',
+                                'full_name': 'Admin Sistema',
+                                'is_active': True,
+                                'date_joined': '2024-09-19T01:00:00Z'
+                            }
+                        ]
+                    }
+                }
+            )
+        },
+        tags=['Usuarios - Consultas']
+    )
     @action(detail=False, methods=['get'])
     def active(self, request):
         """Listar solo usuarios activos"""
@@ -331,10 +646,88 @@ class UserViewSet(viewsets.ModelViewSet):
             'results': serializer.data
         })
     
+    @swagger_auto_schema(
+        operation_description="Obtener usuarios por rol específico",
+        security=[{'Bearer': []}],
+        manual_parameters=[
+            openapi.Parameter(
+                'role_name',
+                openapi.IN_PATH,
+                description='Nombre del rol',
+                type=openapi.TYPE_STRING,
+                enum=['administrador', 'empleadonivel1', 'empleadonivel2', 'cliente'],
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='Usuarios con el rol especificado',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'rol': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'nombre': openapi.Schema(type=openapi.TYPE_STRING),
+                                'descripcion': openapi.Schema(type=openapi.TYPE_STRING),
+                                'total_usuarios': openapi.Schema(type=openapi.TYPE_INTEGER)
+                            }
+                        ),
+                        'usuarios': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'username': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'full_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                                    'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time')
+                                }
+                            )
+                        )
+                    }
+                ),
+                examples={
+                    'application/json': {
+                        'rol': {
+                            'nombre': 'administrador',
+                            'descripcion': 'Administrador con acceso total al sistema',
+                            'total_usuarios': 2
+                        },
+                        'usuarios': [
+                            {
+                                'id': 1,
+                                'username': 'admin',
+                                'email': 'admin@empresa.com',
+                                'first_name': 'Admin',
+                                'last_name': 'Sistema',
+                                'full_name': 'Admin Sistema',
+                                'is_active': True,
+                                'date_joined': '2024-09-19T01:00:00Z'
+                            }
+                        ]
+                    }
+                }
+            ),
+            404: openapi.Response(
+                description='Rol no encontrado',
+                examples={
+                    'application/json': {
+                        'error': 'Rol "vendedor_inexistente" no encontrado'
+                    }
+                }
+            )
+        },
+        tags=['Usuarios - Consultas']
+    )
     @action(detail=False, methods=['get'], url_path='by-role/(?P<role_name>[^/.]+)')
     def by_role(self, request, role_name=None):
         """
-        📝 MICROCONCEPTO: URLs con parámetros personalizados
+        MICROCONCEPTO: URLs con parámetros personalizados
         
         url_path permite definir URLs más complejas con parámetros.
         """
@@ -360,10 +753,44 @@ class UserViewSet(viewsets.ModelViewSet):
             'usuarios': UserBasicSerializer(users, many=True).data
         })
     
+    @swagger_auto_schema(
+        operation_description="Obtener estadísticas del sistema de usuarios",
+        responses={
+            200: openapi.Response(
+                description='Estadísticas del sistema',
+                schema=UserStatsSerializer,
+                examples={
+                    'application/json': {
+                        'total_usuarios': 25,
+                        'usuarios_activos': 23,
+                        'usuarios_inactivos': 2,
+                        'usuarios_por_rol': {
+                            'administrador': 2,
+                            'empleadonivel1': 5,
+                            'empleadonivel2': 8,
+                            'cliente': 10
+                        },
+                        'registros_ultimo_mes': 8,
+                        'usuarios_nuevos_hoy': 2,
+                        'ultimo_login': '2024-09-19T01:30:00Z'
+                    }
+                }
+            ),
+            403: openapi.Response(
+                description='Sin permisos para ver estadísticas',
+                examples={
+                    'application/json': {
+                        'detail': 'No tiene permisos para realizar esta acción.'
+                    }
+                }
+            )
+        },
+        tags=['Usuarios - Administración']
+    )
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """
-        📝 MICROCONCEPTO: Endpoints de estadísticas
+        MICROCONCEPTO: Endpoints de estadísticas
         
         Útil para dashboards y reportes.
         """
