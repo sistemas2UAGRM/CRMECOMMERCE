@@ -79,7 +79,7 @@ function Dashboard() {
   ];
 
   const testimonials = [
-    { name: "María García", role: "CEO de TechStore", text: "EvoCRM transformó completamente nuestra gestión de clientes. La interfaz es intuitiva y el soporte es de primera." },
+    { name: "María García", role: "CEO de TechStore", text: "ChambaSoft transformó completamente nuestra gestión de clientes. La interfaz es intuitiva y el soporte es de primera." },
     { name: "Carlos López", role: "Founder de EcoShop", text: "La mejor inversión para hacer crecer mi negocio online. Las automatizaciones nos han ahorrado horas de trabajo." },
     { name: "Ana Martínez", role: "Directora de Ventas", text: "Incrementamos nuestras ventas un 40% en 3 meses gracias a los insights del CRM. ¡Impresionante!" }
   ];
@@ -105,12 +105,11 @@ function Dashboard() {
       }`}>
         <div className="container mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              EvoCRM
-            </h1>
+            <img 
+              src="/logoCRM.png" 
+              alt="Logo ChambaSOFT"
+              className="w-20 h-20 object-contain rounded-lg shadow-md"
+            />
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -123,22 +122,7 @@ function Dashboard() {
               Iniciar sesión
             </Link>
           </nav>
-
-          <button className="md:hidden text-slate-700" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
         </div>
-
-        {isMenuOpen && (
-          <nav className="md:hidden mt-4 mx-4 bg-white rounded-2xl shadow-xl p-4">
-            <ul className="space-y-3">
-              {["features","plans","testimonials"].map((id) => (
-                <li key={id}><a href={`#${id}`} className="block py-2 text-slate-700 hover:text-blue-600 capitalize">{id}</a></li>
-              ))}
-              <li><a href="#login" className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-3 rounded-full font-semibold">Ingresar</a></li>
-            </ul>
-          </nav>
-        )}
       </header>
 
       <main className="pt-24">
