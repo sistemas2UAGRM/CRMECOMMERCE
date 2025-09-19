@@ -581,50 +581,12 @@ class UserViewSet(viewsets.ModelViewSet):
         })
     
     @swagger_auto_schema(
-        operation_description="Listar solo usuarios activos del sistema",
+        operation_description="Listar solo usuarios activos",
         security=[{'Bearer': []}],
         responses={
             200: openapi.Response(
                 description='Lista de usuarios activos',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Total de usuarios activos'),
-                        'results': openapi.Schema(
-                            type=openapi.TYPE_ARRAY,
-                            items=openapi.Schema(
-                                type=openapi.TYPE_OBJECT,
-                                properties={
-                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                    'username': openapi.Schema(type=openapi.TYPE_STRING),
-                                    'email': openapi.Schema(type=openapi.TYPE_STRING),
-                                    'first_name': openapi.Schema(type=openapi.TYPE_STRING),
-                                    'last_name': openapi.Schema(type=openapi.TYPE_STRING),
-                                    'full_name': openapi.Schema(type=openapi.TYPE_STRING),
-                                    'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-                                    'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time')
-                                }
-                            )
-                        )
-                    }
-                ),
-                examples={
-                    'application/json': {
-                        'count': 15,
-                        'results': [
-                            {
-                                'id': 1,
-                                'username': 'admin',
-                                'email': 'admin@empresa.com',
-                                'first_name': 'Admin',
-                                'last_name': 'Sistema',
-                                'full_name': 'Admin Sistema',
-                                'is_active': True,
-                                'date_joined': '2024-09-19T01:00:00Z'
-                            }
-                        ]
-                    }
-                }
+                schema=UserBasicSerializer(many=True)
             )
         },
         tags=['Usuarios - Consultas']
@@ -632,19 +594,15 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def active(self, request):
         """Listar solo usuarios activos"""
-        active_users = self.queryset.filter(is_active=True)
+        queryset = self.queryset.filter(is_active=True)
+        page = self.paginate_queryset(queryset)
         
-        # Aplicar paginación
-        page = self.paginate_queryset(active_users)
         if page is not None:
-            serializer = UserBasicSerializer(page, many=True)
+            serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
-        serializer = UserBasicSerializer(active_users, many=True)
-        return Response({
-            'count': active_users.count(),
-            'results': serializer.data
-        })
+            
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     
     @swagger_auto_schema(
         operation_description="Obtener usuarios por rol específico",

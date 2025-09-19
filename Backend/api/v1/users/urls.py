@@ -1,66 +1,101 @@
 # api/v1/users/urls.py
 
 """
-📚 MICROCONCEPTOS - CONFIGURACIÓN DE URLs EN DRF
+📚 URLs MODULARES PARA USUARIOS
 
-Las URLs en DRF se pueden configurar de varias maneras:
+Nueva estructura modular que organiza las URLs por funcionalidad:
 
-1. ROUTERS: Para ViewSets, generan automáticamente las URLs CRUD
-2. path(): Para vistas individuales como APIView
-3. include(): Para incluir URLs de otras apps
+AUTENTICACIÓN:
+- /register/ -> Registro público
+- /admin-register/ -> Registro por admin
+- /login/ -> Login JWT
 
-Tipos de routers:
-- DefaultRouter: Incluye una vista raíz de la API
-- SimpleRouter: Más básico, sin vista raíz
+PERFIL:
+- /profile/me/ -> Ver/actualizar perfil
+- /profile/permissions/ -> Ver permisos
+- /profile/change-password/ -> Cambiar contraseña
 
-Patrones de URL:
-- /users/ -> UserViewSet.list()
-- /users/{id}/ -> UserViewSet.retrieve()
-- /users/profile/ -> UserViewSet.profile() (acción personalizada)
+ADMINISTRACIÓN:
+- /admin/ -> CRUD usuarios (admin only)
+- /admin/{id}/activate/ -> Activar usuario
+- /admin/{id}/deactivate/ -> Desactivar usuario
+
+BÚSQUEDA:
+- /search/search/ -> Buscar usuarios
+- /search/active/ -> Usuarios activos
+- /search/by-role/{role}/ -> Usuarios por rol
+- /search/stats/ -> Estadísticas
 """
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
+# Importar views modulares
 from .views import (
-    UserViewSet, UserRegistrationView, AdminUserRegistrationView, LoginView
+    # Autenticación
+    UserRegistrationView,
+    AdminUserRegistrationView,
+    LoginView,
+    # Módulos especializados
+    UserProfileViewSet,
+    UserAdminViewSet,
+    UserSearchViewSet
 )
 
-# Router para ViewSets
-router = DefaultRouter()
-router.register(r'', UserViewSet, basename='user')
+# Routers para cada módulo
+profile_router = DefaultRouter()
+profile_router.register(r'profile', UserProfileViewSet, basename='user-profile')
+
+admin_router = DefaultRouter()
+admin_router.register(r'admin', UserAdminViewSet, basename='user-admin')
+
+search_router = DefaultRouter()
+search_router.register(r'search', UserSearchViewSet, basename='user-search')
 
 urlpatterns = [
-    # Endpoints de autenticación (no requieren ViewSet)
+    # === AUTENTICACIÓN (endpoints públicos) ===
     path('register/', UserRegistrationView.as_view(), name='user-register'),
     path('admin-register/', AdminUserRegistrationView.as_view(), name='admin-user-register'),
     path('login/', LoginView.as_view(), name='user-login'),
     
-    # ViewSet URLs (incluye todas las acciones CRUD + personalizadas)
-    path('', include(router.urls)),
+    # === PERFIL (gestión personal) ===
+    path('', include(profile_router.urls)),
+    
+    # === ADMINISTRACIÓN (solo admins) ===
+    path('', include(admin_router.urls)),
+    
+    # === BÚSQUEDA Y ESTADÍSTICAS ===
+    path('', include(search_router.urls)),
 ]
 
 """
-📝 MICROCONCEPTO: URLs generadas automáticamente
+📝 ENDPOINTS RESULTANTES:
 
-El router genera estas URLs automáticamente:
+AUTENTICACIÓN:
+- POST /api/v1/users/register/
+- POST /api/v1/users/admin-register/
+- POST /api/v1/users/login/
 
-CRUD básico:
-- GET /api/v1/users/ -> UserViewSet.list()
-- POST /api/v1/users/ -> UserViewSet.create()
-- GET /api/v1/users/{id}/ -> UserViewSet.retrieve()
-- PUT /api/v1/users/{id}/ -> UserViewSet.update()
-- PATCH /api/v1/users/{id}/ -> UserViewSet.partial_update()
-- DELETE /api/v1/users/{id}/ -> UserViewSet.destroy()
+PERFIL:
+- GET/PUT/PATCH /api/v1/users/profile/me/
+- GET /api/v1/users/profile/permissions/
+- POST /api/v1/users/profile/change-password/
 
-Acciones personalizadas:
-- GET/PUT/PATCH /api/v1/users/profile/ -> UserViewSet.profile()
-- GET /api/v1/users/search/ -> UserViewSet.search()
-- GET /api/v1/users/active/ -> UserViewSet.active()
-- GET /api/v1/users/by-role/{role_name}/ -> UserViewSet.by_role()
-- GET /api/v1/users/stats/ -> UserViewSet.stats()
+ADMINISTRACIÓN:
+- GET /api/v1/users/admin/ (listar usuarios)
+- POST /api/v1/users/admin/ (crear usuario)
+- GET /api/v1/users/admin/{id}/ (detalle usuario)
+- PUT/PATCH /api/v1/users/admin/{id}/ (actualizar usuario)
+- DELETE /api/v1/users/admin/{id}/ (eliminar usuario)
+- POST /api/v1/users/admin/{id}/activate/
+- POST /api/v1/users/admin/{id}/deactivate/
+- GET /api/v1/users/admin/{id}/activity_log/
 
-Endpoints manuales:
-- POST /api/v1/users/register/ -> UserRegistrationView
-- POST /api/v1/users/admin-register/ -> AdminUserRegistrationView
-- POST /api/v1/users/login/ -> LoginView
+BÚSQUEDA:
+- GET /api/v1/users/search/search/?q=term
+- GET /api/v1/users/search/active/
+- GET /api/v1/users/search/by-role/{role_name}/
+- GET /api/v1/users/search/stats/
+- GET /api/v1/users/search/roles/
+- GET /api/v1/users/search/hierarchy/
 """
