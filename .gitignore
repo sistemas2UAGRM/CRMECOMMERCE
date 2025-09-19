@@ -10,6 +10,8 @@
 .env.test
 
 # Archivos de configuración de sistema
+.bat
+*.bat
 .DS_Store
 .DS_Store?
 ._*
@@ -20,6 +22,9 @@ Thumbs.db
 
 # Editores de código
 .vscode/
+.vs/
+*.sln
+*.pyproj
 .idea/
 *.swp
 *.swo
