@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
-import API from "../services/api";
-import { Link } from "react-router-dom";
+import api from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -11,10 +12,13 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.post("token/", { username: email, password });
-      localStorage.setItem("token", res.data.access);
-      alert("Login exitoso 🚀");
+      const res = await api.post("/users/login/", { email, password });
+      localStorage.setItem("accessToken", res.data.access);
+      localStorage.setItem("refreshToken", res.data.refresh);
+      
+      alert("Login exitoso");
       setError("");
+      navigate("/");
     } catch (err) {
       setError("Credenciales inválidas");
     }

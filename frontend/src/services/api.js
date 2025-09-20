@@ -1,14 +1,18 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: "http://localhost:8000/api/",
+const api = axios.create({
+  baseURL: "http://127.0.0.1:8000/api/v1", // tu backend Django
 });
 
-// Interceptor para adjuntar el token
-API.interceptors.request.use((config) => {
+// Interceptor para enviar token JWT en cada request
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization; // evita 'Bearer undefined'
+  }
   return config;
 });
 
-export default API;
+export default api;

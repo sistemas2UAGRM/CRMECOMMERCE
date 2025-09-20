@@ -51,11 +51,13 @@ INSTALLED_APPS = [
     'core.common',
     'core.crm',
     'api',
+    "corsheaders",
 ]
 AUTH_USER_MODEL = 'users.User' 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -191,6 +193,7 @@ SIMPLE_JWT = {
 
 # Configuración de CORS (si se necesita para frontend)
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite
     "http://localhost:3000",  # React
     "http://localhost:8080",  # Vue
     "http://localhost:4200",  # Angular
