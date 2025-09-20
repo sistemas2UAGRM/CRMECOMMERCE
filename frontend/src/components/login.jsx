@@ -13,14 +13,30 @@ export default function Login() {
     e.preventDefault();
     try {
       const res = await api.post("/users/login/", { email, password });
-      localStorage.setItem("accessToken", res.data.access);
-      localStorage.setItem("refreshToken", res.data.refresh);
-      
-      alert("Login exitoso");
+
+      // Maneja ambos formatos: access / refresh  OR access_token / refresh_token
+      const access = res.data.access ?? res.data.access_token;
+      const refresh = res.data.refresh ?? res.data.refresh_token;
+
+      if (!access || !refresh) {
+      // respuesta inesperada
+        setError("Respuesta de autenticación inválida");
+        return;
+      }
+
+      localStorage.setItem("accessToken", access);
+      localStorage.setItem("refreshToken", refresh);
+
+      // Opcional: configurar axios para enviar Authorization en siguientes requests
+      api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+
       setError("");
+      alert("Login exitoso");
       navigate("/");
     } catch (err) {
-      setError("Credenciales inválidas");
+    // Mejor manejo del error (muestra mensaje del backend si existe)
+      const msg = err.response?.data?.detail || err.response?.data?.message || "Credenciales inválidas";
+      setError(msg);
     }
   };
 

@@ -48,7 +48,7 @@ function Register() {
       
       if (response.status === 201 || response.status === 200) {
         setSuccess(response.data?.message || "Usuario registrado exitosamente.");
-        setTimeout(() => navigate("/login"), 2000);
+        setTimeout(() => Link("/login"), 2000);
       } else {
         setError("Error al registrar usuario.");
       }
