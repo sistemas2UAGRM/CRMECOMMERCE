@@ -10,35 +10,40 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/users/login/", { email, password });
+  e.preventDefault();
+  try {
+    const res = await api.post("/users/login/", { email, password });
 
-      // Maneja ambos formatos: access / refresh  OR access_token / refresh_token
-      const access = res.data.access ?? res.data.access_token;
-      const refresh = res.data.refresh ?? res.data.refresh_token;
+    // Maneja ambos formatos:
+    const access = res.data.access ?? res.data.access_token ?? res.data.token;
+    const refresh = res.data.refresh ?? res.data.refresh_token;
 
-      if (!access || !refresh) {
-      // respuesta inesperada
-        setError("Respuesta de autenticación inválida");
-        return;
-      }
+    console.log("Respuesta login:", res.data);
 
-      localStorage.setItem("accessToken", access);
-      localStorage.setItem("refreshToken", refresh);
-
-      // Opcional: configurar axios para enviar Authorization en siguientes requests
-      api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
-
-      setError("");
-      alert("Login exitoso");
-      navigate("/");
-    } catch (err) {
-    // Mejor manejo del error (muestra mensaje del backend si existe)
-      const msg = err.response?.data?.detail || err.response?.data?.message || "Credenciales inválidas";
-      setError(msg);
+    if (!access) {
+      setError("Respuesta de autenticación inválida (no vino token).");
+      return;
     }
-  };
+
+    localStorage.setItem("accessToken", access);
+    if (refresh) localStorage.setItem("refreshToken", refresh);
+
+    // Configurar axios para siguientes requests
+    api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+
+    setError("");
+    alert("Login exitoso");
+    navigate("/");
+  } catch (err) {
+    console.error("Error login:", err);
+    const msg =
+      err.response?.data?.detail ||
+      err.response?.data?.message ||
+      JSON.stringify(err.response?.data) ||
+      "Credenciales inválidas";
+    setError(msg);
+  }
+};
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
