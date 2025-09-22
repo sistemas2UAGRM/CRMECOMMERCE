@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import api from "../services/api";
 import { Link, useNavigate } from "react-router-dom";
+import { setAuthToken } from "../utils/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,45 +11,45 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await api.post("/users/login/", { email, password });
+    e.preventDefault();
+    try {
+      const res = await api.post("/users/login/", { email, password });
 
-    // Maneja ambos formatos:
-    const access = res.data.access ?? res.data.access_token ?? res.data.token;
-    const refresh = res.data.refresh ?? res.data.refresh_token;
+      // Maneja ambos formatos:
+      const access = res.data.access ?? res.data.access_token ?? res.data.token;
+      const refresh = res.data.refresh ?? res.data.refresh_token;
 
-    console.log("Respuesta login:", res.data);
+      console.log("Respuesta login:", res.data);
 
-    if (!access) {
-      setError("Respuesta de autenticación inválida (no vino token).");
-      return;
+      if (!access) {
+        setError("Respuesta de autenticación inválida (no vino token).");
+        return;
+      }
+
+      // Usar utilidad para guardar tokens de manera consistente
+      setAuthToken(access, refresh);
+
+      // Configurar axios para siguientes requests
+      api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+
+      setError("");
+      alert("Login exitoso");
+      navigate("/admin");
+    } catch (err) {
+      console.error("Error login:", err);
+      const msg =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        JSON.stringify(err.response?.data) ||
+        "Credenciales inválidas";
+      setError(msg);
     }
-
-    localStorage.setItem("accessToken", access);
-    if (refresh) localStorage.setItem("refreshToken", refresh);
-
-    // Configurar axios para siguientes requests
-    api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
-
-    setError("");
-    alert("Login exitoso");
-    navigate("/");
-  } catch (err) {
-    console.error("Error login:", err);
-    const msg =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      JSON.stringify(err.response?.data) ||
-      "Credenciales inválidas";
-    setError(msg);
-  }
-};
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <section className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        
+
         {/* Header */}
         <header className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[#2e7e8b]">Accede a tu cuenta</h1>

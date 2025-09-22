@@ -9,13 +9,13 @@ import Perfiles from "../modulos/usuarios/perfiles";
 export default function AppRouter() {
   return (
     <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/registro" element={<Register />} />
-        <Route path="/perfiles" element={<Perfiles />} />
-        <Route path="/admin" element={<DashAdmin />} />
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/registro" element={<Register />} />
+      <Route path="/perfiles" element={<Perfiles />} />
+      <Route path="/admin" element={<DashAdmin />} />
 
-        <Route path="/carrito" element={<Carrito />} />
+      <Route path="/carrito" element={<Carrito />} />
     </Routes>
   );
 }

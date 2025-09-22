@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAuthToken } from "../utils/auth";
 
 const api = axios.create({
   baseURL: "http://127.0.0.1:8000/api/v1", // tu backend Django
@@ -6,7 +7,7 @@ const api = axios.create({
 
 // Interceptor para enviar token JWT en cada request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = getAuthToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   } else {
