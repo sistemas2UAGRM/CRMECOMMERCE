@@ -1,15 +1,15 @@
-FROM node:24-alpine3.21
+FROM oven/bun:1.2.21-alpine
 
 WORKDIR /usr/app/frontend
 
-COPY package*.json .
+COPY bun.lock package.json .
 
-RUN npm install -D tailwindcss && npm install
+RUN bun install
 
 COPY . .
 
 EXPOSE 4000
 
-CMD ["npm", "run", "dev"]
+CMD ["bun", "run", "dev"]
 
 
