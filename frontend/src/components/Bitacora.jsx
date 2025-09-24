@@ -36,7 +36,7 @@ const Bitacora = () => {
             if (!token) {
                 setError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
                 return;
-            } let url = `http://localhost:8000/api/v1/common/bitacora/?page=${page}`;
+            } let url = `http://48.221.113.92:8000/api/v1/common/bitacora/?page=${page}`;
 
             // Agregar filtros a la URL
             const queryParams = [];
@@ -122,7 +122,7 @@ const Bitacora = () => {
                 alert('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
                 return;
             }
-            const response = await fetch(`http://localhost:8000/api/v1/common/export/?format=${format}`, {
+            const response = await fetch(`http://48.221.113.92:8000/api/v1/common/export/?format=${format}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 }

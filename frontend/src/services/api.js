@@ -2,7 +2,7 @@ import axios from "axios";
 import { getAuthToken } from "../utils/auth";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/v1", // tu backend Django
+  baseURL: "http://48.221.113.92:8000/api/v1", // tu backend Django
 });
 
 // Interceptor para enviar token JWT en cada request

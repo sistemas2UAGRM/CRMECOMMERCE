@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-b$=*%yslk+3@5s$0@-8oancej4ay!ak_psrs#u%4!$wnrz=)z)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -51,13 +51,13 @@ INSTALLED_APPS = [
     'core.common',
     'core.crm',
     'api',
-    "corsheaders",
+    'corsheaders',
 ]
 AUTH_USER_MODEL = 'users.User' 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -194,11 +194,15 @@ SIMPLE_JWT = {
 # Configuración de CORS (si se necesita para frontend)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4000",  # Docker
+    "http://frontend:4000",
+    "http://48.221.113.92:4000",
     "http://localhost:5173",  # Vite
     "http://localhost:3000",  # React
     "http://localhost:8080",  # Vue
     "http://localhost:4200",  # Angular
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
