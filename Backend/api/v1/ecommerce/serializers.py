@@ -108,6 +108,7 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = ['id', 'stock_min', 'stock_actual', 'disponible', 'estado']
+        #fields = ['id', 'stock_min', 'stock_actual']
         read_only_fields = ['id']
     
     def get_disponible(self, obj):
@@ -232,16 +233,14 @@ class ProductoCreateSerializer(serializers.ModelSerializer):
         stock_data = validated_data.pop('stock')
         categoria_id = validated_data.pop('categoria_id')
         
+        # Crear stock asociado
+        stock = Stock.objects.create( **stock_data)
+        
         # Crear producto
         producto = Producto.objects.create(
+            stock=stock,
             categoria_id=categoria_id,
             **validated_data
-        )
-        
-        # Crear stock asociado
-        Stock.objects.create(
-            producto=producto,
-            **stock_data
         )
         
         return producto

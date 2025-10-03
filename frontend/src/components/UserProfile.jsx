@@ -54,7 +54,7 @@ const UserProfile = ({ onBack }) => {
                 return;
             }
 
-            const response = await fetch('http://48.221.113.92:8000/api/v1/users/profile/me/', {
+            const response = await fetch('http://localhost:8000/api/v1/users/profile/me/', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ const UserProfile = ({ onBack }) => {
                 setError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
                 return;
             }
-            const response = await fetch('http://48.221.113.92:8000/api/v1/users/profile/me/', {
+            const response = await fetch('http://localhost:8000/api/v1/users/profile/me/', {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -163,7 +163,7 @@ const UserProfile = ({ onBack }) => {
                 setPasswordErrors({ general: 'No se encontró token de autenticación. Por favor, inicie sesión nuevamente.' });
                 return;
             }
-            const response = await fetch('http://48.221.113.92:8000/api/v1/users/profile/change-password/', {
+            const response = await fetch('http://localhost:8000/api/v1/users/profile/change-password/', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -192,16 +192,6 @@ SIMPLE_JWT = {
 }
 
 # Configuración de CORS (si se necesita para frontend)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4000",  # Docker
-    "http://frontend:4000",
-    "http://48.221.113.92:4000",
-    "http://localhost:5173",  # Vite
-    "http://localhost:3000",  # React
-    "http://localhost:8080",  # Vue
-    "http://localhost:4200",  # Angular
-]
-
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
