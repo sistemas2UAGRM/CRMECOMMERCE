@@ -3,7 +3,7 @@ services:
      container_name: backend-container
      build: ./backend
      volumes:
-       - ./Backend:/usr/app/backend
+       - ./backend:/usr/app/backend
      ports:
        - 8000:8000
      networks:

@@ -147,14 +147,14 @@ class ProductoListSerializer(serializers.ModelSerializer):
     Usamos select_related para evitar N+1 queries.
     """
     
-    categoria = serializers.CharField(source='categoria.nombre', read_only=True)
+    categoria = serializers.CharField(source='categoria.id', read_only=True)
     disponible = serializers.SerializerMethodField()
     stock_disponible = serializers.IntegerField(source='stock.stock_actual', read_only=True)
     
     class Meta:
         model = Producto
         fields = [
-            'id', 'nombre', 'precio_venta', 'categoria', 
+            'id', 'nombre', 'precio_venta', 'categoria', 'descripcion', 
             'disponible', 'stock_disponible'
         ]
     

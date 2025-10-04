@@ -91,13 +91,17 @@ export default function Productos() {
 
   // Abre el modal para editar un producto existente
   const openEditModal = (product) => {
+	  console.log(product);
     setFormState({
-      name: product.name || "",
-      sku: product.sku || "",
-      price: product.price ?? "",
-      stock: product.stock ?? "",
-      category: product.category || "",
-      description: product.description || "",
+      nombre: product.nombre || "",
+      categoria_id: product.categoria || "",
+      precio_venta: product.precio_venta ?? "",
+      stock: {
+		  stock_min: "0",
+		  stock_actual: product.stock_disponible ?? "",
+		  estado: "disponible"
+	  },
+      descripcion: product.descripcion || "",
       active: product.active ?? true,
     });
     setCurrentProduct(product);
@@ -148,7 +152,8 @@ export default function Productos() {
 
     const isCreating = formMode === "create";
     const url = isCreating ? "/ecommerce/productos/" : `/ecommerce/productos/${currentProduct.id}/`;
-    const method = isCreating ? 'post' : 'patch';
+    const method = isCreating ? 'post' : 'put';
+	  console.log(method);
     
     let dataPayload;
     const config = {};
@@ -215,7 +220,7 @@ export default function Productos() {
               <th className="px-6 py-3">#</th>
               <th className="px-6 py-3">Imagen</th>
               <th className="px-6 py-3">Nombre</th>
-              <th className="px-6 py-3">SKU</th>
+              <th className="px-6 py-3">Categoria</th>
               <th className="px-6 py-3">Precio</th>
               <th className="px-6 py-3">Stock</th>
               <th className="px-6 py-3">Estado</th>
@@ -279,7 +284,7 @@ export default function Productos() {
           <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-2xl animate-fade-in-down">
             <div className="flex items-center justify-between pb-3 border-b">
               <h3 className="text-xl font-semibold text-gray-800">
-                {formMode === "create" ? "Crear Nuevo Producto" : `Editar: ${currentProduct?.name}`}
+                {formMode === "create" ? "Crear Nuevo Producto" : `Editar: ${currentProduct?.nombre}`}
               </h3>
               <button onClick={resetFormAndClose} className="p-1 rounded-full hover:bg-gray-100"><X size={20} className="text-gray-600" /></button>
             </div>
@@ -290,12 +295,12 @@ export default function Productos() {
                   <input id="name" name="nombre" value={formState.nombre} onChange={handleFormChange} placeholder="Ej: Laptop Pro" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" required />
                 </div>
                 <div>
-                  <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                  <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
                   <input id="sku" name="categoria_id" value={formState.categoria_id} onChange={handleFormChange} placeholder="Ej: LP-001" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
                 </div>
                 <div>
                   <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
-                  <input id="price" name="precio_venta" value={formState.prrecio_venta} onChange={handleFormChange} type="number" step="0.01" placeholder="Ej: 999.99" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
+                  <input id="price" name="precio_venta" value={formState.precio_venta} onChange={handleFormChange} type="number" step="0.01" placeholder="Ej: 999.99" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
                 </div>
                 <div>
                   <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
