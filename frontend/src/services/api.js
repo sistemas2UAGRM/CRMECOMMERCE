@@ -7,12 +7,20 @@ const api = axios.create({
 
 // Interceptor para enviar token JWT en cada request
 api.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    delete config.headers.Authorization; // evita 'Bearer undefined'
+  // Endpoints públicos que no necesitan autenticación
+  const publicEndpoints = ['/users/login/', '/users/register/'];
+  const isPublicEndpoint = publicEndpoints.some(endpoint =>
+    config.url?.includes(endpoint)
+  );
+
+  // Solo añadir token si no es un endpoint público
+  if (!isPublicEndpoint) {
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
+
   return config;
 });
 
