@@ -11,8 +11,10 @@ import Bitacora from "./Bitacora";
 import UserProfile from "./UserProfile";
 import { clearAuthTokens } from "../utils/auth";
 
+import UsersAdminList from "../modulos/usuarios/admin/UsersAdminList";
+
 const sidebarItems = [
-  { name: "Usuarios", icon: <Users size={22} />, component: <div>Contenido de Usuarios</div> },
+  { name: "Usuarios", icon: <Users size={22} />, component: <UsersAdminList /> },
   { name: "Empleados", icon: <UserCheck size={22} />, component: <div>Contenido de los empleados</div> },
   { name: "Bitácora", icon: <FileText size={22} />, component: <Bitacora /> },
   { name: "Perfiles", icon: <Shield size={22} />, component: <div>Contenido de Perfiles</div> },
