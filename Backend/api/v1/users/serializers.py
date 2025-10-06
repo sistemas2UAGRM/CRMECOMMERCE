@@ -317,7 +317,21 @@ class AdminUserRegistrationSerializer(serializers.ModelSerializer):
         
     def get_rol_asignado(self, obj):
         """Obtener información del rol asignado"""
-        grupo = obj.groups.first()
+        # Si obj es un dict (datos validados), obtener el rol del dict
+        if isinstance(obj, dict):
+            rol_name = obj.get('rol')
+            if rol_name:
+                from django.contrib.auth.models import Group
+                try:
+                    grupo = Group.objects.get(name=rol_name)
+                except Group.DoesNotExist:
+                    return None
+            else:
+                return None
+        else:
+            # Si obj es una instancia del modelo User
+            grupo = obj.groups.first()
+            
         if grupo:
             descriptions = {
                 'administrador': 'Administrador con acceso total al sistema',

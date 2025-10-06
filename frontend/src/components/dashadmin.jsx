@@ -7,17 +7,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Productos from "../modulos/productos/producto";
+import Empleados from "../modulos/empleados";
+import GestionCarritos from "../modulos/carrito/GestionCarritos";
 import Bitacora from "./Bitacora";
 import UserProfile from "./UserProfile";
 import { clearAuthTokens } from "../utils/auth";
 
 const sidebarItems = [
   { name: "Usuarios", icon: <Users size={22} />, component: <div>Contenido de Usuarios</div> },
-  { name: "Empleados", icon: <UserCheck size={22} />, component: <div>Contenido de los empleados</div> },
+  { name: "Empleados", icon: <UserCheck size={22} />, component: <Empleados /> },
   { name: "Bitácora", icon: <FileText size={22} />, component: <Bitacora /> },
   { name: "Perfiles", icon: <Shield size={22} />, component: <div>Contenido de Perfiles</div> },
   { name: "Productos", icon: <Package size={22} />, component: <Productos /> },
-  { name: "Carritos Activos", icon: <ShoppingCart size={22} />, component: <div>Contenido de Carritos</div> },
+  { name: "Carritos Activos", icon: <ShoppingCart size={22} />, component: <GestionCarritos /> },
   { name: "Pedidos", icon: <ClipboardList size={22} />, component: <div>Contenido de Pedidos</div> },
   { name: "Pagos", icon: <CreditCard size={22} />, component: <div>Contenido de Pagos</div> },
   { name: "CRM", icon: <Handshake size={22} />, component: <div>Contenido de CRM</div> },

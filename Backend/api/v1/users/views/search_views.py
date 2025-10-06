@@ -276,3 +276,111 @@ class UserSearchViewSet(PermissionMixin, IPMixin, viewsets.ViewSet):
             'username': request.user.username,
             'hierarchy': hierarchy_info
         })
+
+    @swagger_auto_schema(
+        operation_description="Obtener lista de empleados del sistema (usuarios con roles de empleado)",
+        manual_parameters=[
+            openapi.Parameter(
+                'page',
+                openapi.IN_QUERY,
+                description="Número de página",
+                type=openapi.TYPE_INTEGER,
+                default=1
+            ),
+            openapi.Parameter(
+                'search',
+                openapi.IN_QUERY,
+                description="Término de búsqueda para filtrar empleados",
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                'active_only',
+                openapi.IN_QUERY,
+                description="Solo empleados activos",
+                type=openapi.TYPE_BOOLEAN,
+                default=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='Lista paginada de empleados',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'count': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'next': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_URI),
+                        'previous': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_URI),
+                        'results': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'username': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'celular': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'fecha_de_nacimiento': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE),
+                                    'sexo': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                                    'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
+                                    'groups': openapi.Schema(
+                                        type=openapi.TYPE_ARRAY,
+                                        items=openapi.Schema(
+                                            type=openapi.TYPE_OBJECT,
+                                            properties={
+                                                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                'name': openapi.Schema(type=openapi.TYPE_STRING)
+                                            }
+                                        )
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            ),
+            403: openapi.Response(
+                description='Sin permisos para ver empleados'
+            )
+        },
+        tags=['Gestión de Empleados']
+    )
+    @action(detail=False, methods=['get'])
+    def employees(self, request):
+        """
+        Endpoint específico para obtener empleados del sistema.
+        
+        Filtra usuarios que tienen roles de empleado (empleadonivel1, empleadonivel2, administrador).
+        Incluye paginación y búsqueda.
+        """
+        # Verificar permisos - solo admin y supervisores pueden ver lista completa de empleados
+        if not self.is_admin_or_supervisor():
+            return Response(
+                {'error': 'No tienes permisos para ver la lista de empleados'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Obtener parámetros de filtro
+        active_only_param = request.query_params.get('active_only', None)
+        
+        # Convertir el parámetro a bool o None
+        if active_only_param is None:
+            active_only = None  # Mostrar todos
+        elif active_only_param.lower() == 'true':
+            active_only = True  # Solo activos
+        elif active_only_param.lower() == 'false':
+            active_only = False  # Solo inactivos
+        else:
+            active_only = None  # Por defecto, mostrar todos
+        
+        # Obtener empleados usando el servicio
+        result = UserManagementService.get_employees(
+            user=request.user,
+            search=request.query_params.get('search', ''),
+            page=int(request.query_params.get('page', 1)),
+            active_only=active_only
+        )
+        
+        return Response(result)

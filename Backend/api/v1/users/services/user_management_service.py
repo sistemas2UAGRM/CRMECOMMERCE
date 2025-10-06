@@ -238,3 +238,86 @@ class UserManagementService:
             'groups': list(groups),
             'can_manage_roles': can_manage
         }
+
+    @staticmethod
+    def get_employees(user, search='', page=1, active_only=None, page_size=20):
+        """
+        Obtener empleados del sistema con paginación y filtros.
+        
+        Args:
+            user (User): Usuario que hace la request
+            search (str): Término de búsqueda
+            page (int): Número de página
+            active_only (bool|None): True=solo activos, False=solo inactivos, None=todos
+            page_size (int): Tamaño de página
+            
+        Returns:
+            dict: Empleados paginados
+        """
+        from django.core.paginator import Paginator
+        
+        # Roles de empleados (excluyendo clientes)
+        employee_roles = ['administrador', 'empleadonivel1', 'empleadonivel2']
+        
+        # Query base para empleados
+        queryset = User.objects.filter(
+            groups__name__in=employee_roles
+        ).distinct().order_by('first_name', 'last_name', 'username')
+        
+        # Filtrar por estado activo según el parámetro
+        if active_only is True:
+            queryset = queryset.filter(is_active=True)
+        elif active_only is False:
+            queryset = queryset.filter(is_active=False)
+        # Si active_only es None, no filtramos por estado (mostramos todos)
+        
+        # Aplicar búsqueda si se proporciona
+        if search:
+            search_query = Q(username__icontains=search) | \
+                          Q(email__icontains=search) | \
+                          Q(first_name__icontains=search) | \
+                          Q(last_name__icontains=search) | \
+                          Q(celular__icontains=search)
+            queryset = queryset.filter(search_query)
+        
+        # Aplicar filtros de permisos
+        queryset = UserManagementService._apply_permission_filters(queryset, user)
+        
+        # Incluir información de grupos en la consulta
+        queryset = queryset.prefetch_related('groups')
+        
+        # Paginar resultados
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
+        
+        # Serializar empleados
+        employees_data = []
+        for employee in page_obj:
+            employees_data.append({
+                'id': employee.id,
+                'username': employee.username,
+                'email': employee.email,
+                'first_name': employee.first_name,
+                'last_name': employee.last_name,
+                'celular': employee.celular,
+                'fecha_de_nacimiento': employee.fecha_de_nacimiento.isoformat() if employee.fecha_de_nacimiento else None,
+                'sexo': employee.sexo,
+                'is_active': employee.is_active,
+                'date_joined': employee.date_joined.isoformat() if employee.date_joined else None,
+                'groups': [
+                    {
+                        'id': group.id,
+                        'name': group.name
+                    } for group in employee.groups.all()
+                ]
+            })
+        
+        return {
+            'count': paginator.count,
+            'next': page_obj.has_next(),
+            'previous': page_obj.has_previous(),
+            'results': employees_data,
+            'page': page,
+            'num_pages': paginator.num_pages,
+            'page_size': page_size
+        }
