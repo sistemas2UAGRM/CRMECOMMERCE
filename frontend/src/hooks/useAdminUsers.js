@@ -48,7 +48,16 @@ export default function useAdminUsers(initialParams = { page: 1, page_size: 10, 
 
   const refresh = () => fetch();
   const goPage = (page) => fetch({ page });
-  const setSearch = (search) => fetch({ page: 1, search });
+
+  // Mejorar setSearch para manejar parámetros complejos
+  const setSearch = (searchOrParams) => {
+    if (typeof searchOrParams === 'string') {
+      fetch({ page: 1, search: searchOrParams });
+    } else {
+      // Si es un objeto, aplicar todos los parámetros
+      fetch({ page: 1, ...searchOrParams });
+    }
+  };
 
   const remove = async (id) => {
     await adminDeleteUser(id);

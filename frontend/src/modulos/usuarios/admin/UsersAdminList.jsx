@@ -7,15 +7,15 @@ import {
   adminCreateUser,
   adminUpdateUser,
 } from "../../../services/adminUsers";
-import { 
-  Users, 
-  Search, 
-  Plus, 
-  RefreshCw, 
-  Eye, 
-  Edit2, 
-  Trash2, 
-  UserCheck, 
+import {
+  Users,
+  Search,
+  Plus,
+  RefreshCw,
+  Eye,
+  Edit2,
+  Trash2,
+  UserCheck,
   UserX,
   X,
   Save,
@@ -26,7 +26,12 @@ import {
   Calendar,
   Shield,
   Activity,
-  AlertCircle
+  AlertCircle,
+  Filter,
+  FilterX,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 /**
@@ -41,6 +46,24 @@ export default function UsersAdminList() {
   const [mode, setMode] = useState("list"); // 'list' | 'view' | 'edit' | 'new'
   const [selectedId, setSelectedId] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Estados para filtros avanzados
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    rol: "",
+    is_active: "",
+    ordering: "-date_joined"
+  });
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
+  // Limpiar timeout al desmontar componente
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   // Datos para modal
   const [modalLoading, setModalLoading] = useState(false);
@@ -59,10 +82,88 @@ export default function UsersAdminList() {
   });
   const [errors, setErrors] = useState({});
 
-  // Buscar
+  // Buscar con filtros
   const handleSearch = (e) => {
     e?.preventDefault();
-    setSearch(q);
+    performSearch();
+  };
+
+  const performSearch = () => {
+    const searchParams = {
+      search: q,
+      ...filters
+    };
+    // Filtrar parámetros vacíos
+    Object.keys(searchParams).forEach(key => {
+      if (searchParams[key] === "" || searchParams[key] == null) {
+        delete searchParams[key];
+      }
+    });
+    setSearch(searchParams);
+  };
+
+  // Búsqueda en tiempo real con debounce
+  const handleSearchInputChange = (value) => {
+    setQ(value);
+
+    // Cancelar búsqueda anterior si existe
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Nueva búsqueda después de 500ms
+    const timeout = setTimeout(() => {
+      const searchParams = {
+        search: value,
+        ...filters
+      };
+      Object.keys(searchParams).forEach(key => {
+        if (searchParams[key] === "" || searchParams[key] == null) {
+          delete searchParams[key];
+        }
+      });
+      setSearch(searchParams);
+    }, 500);
+
+    setSearchTimeout(timeout);
+  };
+
+  // Manejar cambios en filtros
+  const handleFilterChange = (filterKey, value) => {
+    const newFilters = { ...filters, [filterKey]: value };
+    setFilters(newFilters);
+
+    // Aplicar filtros inmediatamente
+    const searchParams = {
+      search: q,
+      ...newFilters
+    };
+    Object.keys(searchParams).forEach(key => {
+      if (searchParams[key] === "" || searchParams[key] == null) {
+        delete searchParams[key];
+      }
+    });
+    setSearch(searchParams);
+  };
+
+  // Limpiar todos los filtros
+  const clearFilters = () => {
+    setQ("");
+    setFilters({
+      rol: "",
+      is_active: "",
+      ordering: "-date_joined"
+    });
+    setSearch({});
+  };
+
+  // Contar filtros activos
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (q) count++;
+    if (filters.rol) count++;
+    if (filters.is_active !== "") count++;
+    return count;
   };
 
   // Abrir modal ver/editar/nuevo
@@ -225,15 +326,15 @@ export default function UsersAdminList() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button 
-                onClick={openNew} 
+              <button
+                onClick={openNew}
                 className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
               >
                 <Plus className="w-5 h-5" />
                 Nuevo Usuario
               </button>
-              <button 
-                onClick={() => refresh()} 
+              <button
+                onClick={() => refresh()}
                 className="flex items-center gap-2 bg-white hover:bg-slate-50 border-2 border-slate-200 px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-medium text-slate-700"
               >
                 <RefreshCw className="w-5 h-5" />
@@ -243,25 +344,118 @@ export default function UsersAdminList() {
           </div>
         </div>
 
-        {/* Barra de búsqueda mejorada */}
-        <div className="bg-white rounded-2xl shadow-lg p-4 mb-6 border border-slate-200">
-          <form className="flex gap-2" onSubmit={handleSearch}>
+        {/* Búsqueda avanzada mejorada */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-200">
+          {/* Barra de búsqueda principal */}
+          <div className="flex flex-col lg:flex-row gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input 
-                value={q} 
-                onChange={(e)=>setQ(e.target.value)} 
-                placeholder="Buscar por nombre, email o rol..."
+              <input
+                value={q}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
+                placeholder="Buscar por nombre, email, username..."
                 className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
               />
             </div>
-            <button 
-              type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              Buscar
-            </button>
-          </form>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-3 border-2 rounded-xl font-medium transition-all duration-200 ${showFilters || getActiveFiltersCount() > 0
+                    ? "bg-blue-50 border-blue-200 text-blue-700"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+              >
+                <Filter className="w-4 h-4" />
+                Filtros
+                {getActiveFiltersCount() > 0 && (
+                  <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                    {getActiveFiltersCount()}
+                  </span>
+                )}
+                {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {getActiveFiltersCount() > 0 && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="flex items-center gap-2 px-4 py-3 bg-red-50 border-2 border-red-200 text-red-700 rounded-xl font-medium hover:bg-red-100 transition-all duration-200"
+                >
+                  <FilterX className="w-4 h-4" />
+                  Limpiar
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Panel de filtros avanzados */}
+          {showFilters && (
+            <div className="border-t border-slate-200 pt-4 space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <SlidersHorizontal className="w-4 h-4 text-slate-500" />
+                <h4 className="text-sm font-medium text-slate-700">Filtros Avanzados</h4>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Filtro por Rol */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Rol</label>
+                  <select
+                    value={filters.rol}
+                    onChange={(e) => handleFilterChange("rol", e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200"
+                  >
+                    <option value="">Todos los roles</option>
+                    <option value="administrador">Administrador</option>
+                    <option value="empleadonivel1">Empleado Nivel 1</option>
+                    <option value="empleadonivel2">Empleado Nivel 2</option>
+                    <option value="cliente">Cliente</option>
+                  </select>
+                </div>
+
+                {/* Filtro por Estado */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Estado</label>
+                  <select
+                    value={filters.is_active}
+                    onChange={(e) => handleFilterChange("is_active", e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200"
+                  >
+                    <option value="">Todos los estados</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                  </select>
+                </div>
+
+                {/* Filtro por Ordenamiento */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Ordenar por</label>
+                  <select
+                    value={filters.ordering}
+                    onChange={(e) => handleFilterChange("ordering", e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200"
+                  >
+                    <option value="-date_joined">Más recientes</option>
+                    <option value="date_joined">Más antiguos</option>
+                    <option value="username">Nombre de usuario A-Z</option>
+                    <option value="-username">Nombre de usuario Z-A</option>
+                    <option value="email">Email A-Z</option>
+                    <option value="-email">Email Z-A</option>
+                    <option value="first_name">Nombre A-Z</option>
+                    <option value="-first_name">Nombre Z-A</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Indicador de búsqueda en tiempo real */}
+              <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 px-3 py-2 rounded-lg">
+                <Activity className="w-3 h-3" />
+                La búsqueda se actualiza automáticamente mientras escribes
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Feedback mejorado */}
@@ -271,7 +465,7 @@ export default function UsersAdminList() {
             <span className="text-blue-700 font-medium">Cargando usuarios...</span>
           </div>
         )}
-        
+
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-500" />
@@ -343,30 +537,30 @@ export default function UsersAdminList() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => openView(u.id)} 
+                        <button
+                          onClick={() => openView(u.id)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150 text-sm font-medium"
                         >
                           <Eye className="w-4 h-4" />
                           Ver
                         </button>
-                        <button 
-                          onClick={() => openEdit(u.id)} 
+                        <button
+                          onClick={() => openEdit(u.id)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-150 text-sm font-medium"
                         >
                           <Edit2 className="w-4 h-4" />
                           Editar
                         </button>
-                        <button 
-                          onClick={() => handleToggleActive(u)} 
+                        <button
+                          onClick={() => handleToggleActive(u)}
                           disabled={actionLoading}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-slate-200 hover:bg-slate-50 rounded-lg transition-colors duration-150 text-sm font-medium text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {u.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                           {u.is_active ? "Desactivar" : "Activar"}
                         </button>
-                        <button 
-                          onClick={() => handleDelete(u.id, u.username)} 
+                        <button
+                          onClick={() => handleDelete(u.id, u.username)}
                           disabled={actionLoading}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -390,9 +584,9 @@ export default function UsersAdminList() {
                 Total de usuarios: <span className="font-bold text-slate-900">{data.count ?? "—"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <button 
-                  disabled={!data.previous} 
-                  onClick={() => goPage(Math.max(1, getQueryPage(data.previous) - 1))} 
+                <button
+                  disabled={!data.previous}
+                  onClick={() => goPage(Math.max(1, getQueryPage(data.previous) - 1))}
                   className="inline-flex items-center gap-2 px-4 py-2 border-2 border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-slate-700"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -401,9 +595,9 @@ export default function UsersAdminList() {
                 <div className="px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold shadow-md">
                   Página {currentPageFromData(data)}
                 </div>
-                <button 
-                  disabled={!data.next} 
-                  onClick={() => goPage(getQueryPage(data.next) + 1)} 
+                <button
+                  disabled={!data.next}
+                  onClick={() => goPage(getQueryPage(data.next) + 1)}
                   className="inline-flex items-center gap-2 px-4 py-2 border-2 border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-slate-700"
                 >
                   Siguiente
@@ -432,8 +626,8 @@ export default function UsersAdminList() {
                       {mode === "new" && "Nuevo Usuario"}
                     </h3>
                   </div>
-                  <button 
-                    onClick={closeModal} 
+                  <button
+                    onClick={closeModal}
                     className="p-2 hover:bg-white/20 rounded-lg transition-colors duration-200"
                   >
                     <X className="w-6 h-6" />
@@ -456,7 +650,7 @@ export default function UsersAdminList() {
                               <Users className="w-5 h-5 text-blue-600" />
                               <h4 className="font-bold text-lg text-slate-800">Información Personal</h4>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="flex items-start gap-3">
                                 <div className="p-2 bg-white rounded-lg">
@@ -467,7 +661,7 @@ export default function UsersAdminList() {
                                   <p className="text-slate-900 font-medium">{userData.username}</p>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-start gap-3">
                                 <div className="p-2 bg-white rounded-lg">
                                   <Mail className="w-5 h-5 text-slate-600" />
@@ -477,7 +671,7 @@ export default function UsersAdminList() {
                                   <p className="text-slate-900 font-medium">{userData.email}</p>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-start gap-3">
                                 <div className="p-2 bg-white rounded-lg">
                                   <Users className="w-5 h-5 text-slate-600" />
@@ -487,7 +681,7 @@ export default function UsersAdminList() {
                                   <p className="text-slate-900 font-medium">{userData.full_name}</p>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-start gap-3">
                                 <div className="p-2 bg-white rounded-lg">
                                   <Shield className="w-5 h-5 text-slate-600" />
@@ -497,7 +691,7 @@ export default function UsersAdminList() {
                                   <p className="text-slate-900 font-medium">{userData.rol_actual?.nombre ?? "—"}</p>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-start gap-3">
                                 <div className="p-2 bg-white rounded-lg">
                                   {userData.is_active ? <UserCheck className="w-5 h-5 text-green-600" /> : <UserX className="w-5 h-5 text-red-600" />}
@@ -518,7 +712,7 @@ export default function UsersAdminList() {
                               <Activity className="w-5 h-5 text-indigo-600" />
                               <h4 className="font-bold text-lg text-slate-800">Actividad Reciente</h4>
                             </div>
-                            
+
                             {!userLog.length ? (
                               <div className="text-center py-8">
                                 <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
@@ -556,49 +750,95 @@ export default function UsersAdminList() {
                               <label className="block text-sm font-semibold text-slate-700 mb-2">
                                 Usuario
                               </label>
-                              <input 
-                                name="username" 
-                                value={form.username} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200" 
+                              <input
+                                name="username"
+                                value={form.username}
+                                onChange={handleChange}
+                                required
+                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
                               />
+                              {errors.username && (
+                                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
+                                <Mail className="w-4 h-4" />
+                                Email
+                              </label>
+                              <input
+                                name="email"
+                                type="email"
+                                value={form.email}
+                                onChange={handleChange}
+                                required
+                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
+                              />
+                              {errors.email && (
+                                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Nombres */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Nombre
+                              </label>
+                              <input
+                                name="first_name"
+                                value={form.first_name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
+                              />
+                              {errors.first_name && (
+                                <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
+                              )}
                             </div>
                             <div>
                               <label className="block text-sm font-semibold text-slate-700 mb-2">
                                 Apellido
                               </label>
-                              <input 
-                                name="last_name" 
-                                value={form.last_name} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200" 
+                              <input
+                                name="last_name"
+                                value={form.last_name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
                               />
+                              {errors.last_name && (
+                                <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
+                              )}
                             </div>
                           </div>
 
                           {/* Fecha, Sexo y Celular */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                              <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
                                 <Calendar className="w-4 h-4" />
                                 Fecha de Nacimiento
                               </label>
-                              <input 
-                                type="date" 
-                                name="fecha_de_nacimiento" 
-                                value={form.fecha_de_nacimiento} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200" 
+                              <input
+                                type="date"
+                                name="fecha_de_nacimiento"
+                                value={form.fecha_de_nacimiento}
+                                onChange={handleChange}
+                                max={new Date().toISOString().split('T')[0]}
+                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
                               />
+                              {errors.fecha_de_nacimiento && (
+                                <p className="text-red-500 text-sm mt-1">{errors.fecha_de_nacimiento}</p>
+                              )}
                             </div>
                             <div>
                               <label className="block text-sm font-semibold text-slate-700 mb-2">
                                 Sexo
                               </label>
-                              <select 
-                                name="sexo" 
-                                value={form.sexo} 
-                                onChange={handleChange} 
+                              <select
+                                name="sexo"
+                                value={form.sexo}
+                                onChange={handleChange}
                                 className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
                               >
                                 <option value="">Seleccionar</option>
@@ -606,18 +846,26 @@ export default function UsersAdminList() {
                                 <option value="F">Femenino</option>
                                 <option value="O">Otro</option>
                               </select>
+                              {errors.sexo && (
+                                <p className="text-red-500 text-sm mt-1">{errors.sexo}</p>
+                              )}
                             </div>
                             <div>
-                              <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
                                 <Phone className="w-4 h-4" />
                                 Celular
                               </label>
-                              <input 
-                                name="celular" 
-                                value={form.celular} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200" 
+                              <input
+                                name="celular"
+                                type="tel"
+                                value={form.celular}
+                                onChange={handleChange}
+                                placeholder="Ej: +591 70123456"
+                                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200"
                               />
+                              {errors.celular && (
+                                <p className="text-red-500 text-sm mt-1">{errors.celular}</p>
+                              )}
                             </div>
                           </div>
 
@@ -628,17 +876,18 @@ export default function UsersAdminList() {
                                 <Shield className="w-5 h-5 text-indigo-600" />
                                 Configuración de Acceso
                               </h5>
-                              
+
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
                                     <Shield className="w-4 h-4" />
                                     Rol del Usuario
                                   </label>
-                                  <select 
-                                    name="rol" 
-                                    value={form.rol} 
-                                    onChange={handleChange} 
+                                  <select
+                                    name="rol"
+                                    value={form.rol}
+                                    onChange={handleChange}
+                                    required
                                     className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all duration-200"
                                   >
                                     <option value="cliente">Cliente</option>
@@ -646,20 +895,30 @@ export default function UsersAdminList() {
                                     <option value="empleadonivel1">Empleado Nivel 1</option>
                                     <option value="administrador">Administrador</option>
                                   </select>
+                                  {errors.rol && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.rol}</p>
+                                  )}
                                 </div>
 
                                 <div>
                                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                                     Contraseña (opcional)
                                   </label>
-                                  <input 
-                                    name="password" 
-                                    value={form.password} 
-                                    onChange={handleChange} 
+                                  <input
+                                    name="password"
+                                    value={form.password}
+                                    onChange={handleChange}
                                     type="password"
                                     placeholder="Dejar vacío para autogenerar"
-                                    className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all duration-200" 
+                                    minLength="6"
+                                    className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all duration-200"
                                   />
+                                  {errors.password && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                                  )}
+                                  {form.password && form.password.length < 6 && (
+                                    <p className="text-amber-600 text-sm mt-1">La contraseña debe tener al menos 6 caracteres</p>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -686,9 +945,9 @@ export default function UsersAdminList() {
 
                           {/* Botones de acción */}
                           <div className="flex gap-3 pt-4 border-t-2 border-slate-200">
-                            <button 
-                              disabled={modalLoading} 
-                              type="submit" 
+                            <button
+                              disabled={modalLoading}
+                              type="submit"
                               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {modalLoading ? (
@@ -703,9 +962,9 @@ export default function UsersAdminList() {
                                 </>
                               )}
                             </button>
-                            <button 
-                              type="button" 
-                              onClick={closeModal} 
+                            <button
+                              type="button"
+                              onClick={closeModal}
                               className="px-6 py-3 border-2 border-slate-300 hover:bg-slate-50 rounded-xl font-semibold text-slate-700 transition-all duration-200"
                             >
                               Cancelar

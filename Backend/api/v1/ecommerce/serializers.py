@@ -226,22 +226,20 @@ class ProductoCreateSerializer(serializers.ModelSerializer):
         """
         📝 MICROCONCEPTO: Creación con transacciones
         
-        Crea el producto y su stock en una sola transacción.
+        Crea primero el stock y luego el producto en una sola transacción.
         Si algo falla, se revierte todo.
         """
         stock_data = validated_data.pop('stock')
         categoria_id = validated_data.pop('categoria_id')
         
-        # Crear producto
+        # Crear stock primero
+        stock = Stock.objects.create(**stock_data)
+        
+        # Crear producto con el stock ya creado
         producto = Producto.objects.create(
             categoria_id=categoria_id,
+            stock=stock,
             **validated_data
-        )
-        
-        # Crear stock asociado
-        Stock.objects.create(
-            producto=producto,
-            **stock_data
         )
         
         return producto
