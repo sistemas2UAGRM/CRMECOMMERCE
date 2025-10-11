@@ -9,12 +9,15 @@ import { toast } from 'react-hot-toast';
 
 // Estado inicial del formulario para poder resetearlo fácilmente
 const INITIAL_FORM_STATE = {
-  name: "",
-  sku: "",
-  price: "",
-  stock: "",
-  category: "",
-  description: "",
+  nombre: "",
+  categoria_id: "",
+  precio_venta: "",
+  stock: {
+	  stock_min: "0",
+	  stock_actual: "",
+	  estado: "disponible"
+  },
+  descripcion: "",
   active: true,
 };
 
@@ -37,9 +40,10 @@ export default function Productos() {
     setLoading(true);
     setFormError(null);
     try {
-      const { data } = await api.get("/products/", { 
+      const { data } = await api.get("/ecommerce/productos/", { 
         params: { page: currentPage, search: searchQuery } 
       });
+	  console.log(data);
       setProducts(data.results || data); // Compatible con API paginada o simple
       setPageInfo({ 
         next: data.next, 
@@ -87,13 +91,17 @@ export default function Productos() {
 
   // Abre el modal para editar un producto existente
   const openEditModal = (product) => {
+	  console.log(product);
     setFormState({
-      name: product.name || "",
-      sku: product.sku || "",
-      price: product.price ?? "",
-      stock: product.stock ?? "",
-      category: product.category || "",
-      description: product.description || "",
+      nombre: product.nombre || "",
+      categoria_id: product.categoria || "",
+      precio_venta: product.precio_venta ?? "",
+      stock: {
+		  stock_min: "0",
+		  stock_actual: product.stock_disponible ?? "",
+		  estado: "disponible"
+	  },
+      descripcion: product.descripcion || "",
       active: product.active ?? true,
     });
     setCurrentProduct(product);
@@ -106,7 +114,7 @@ export default function Productos() {
     if (!window.confirm("¿Estás seguro de que quieres eliminar este producto?")) return;
     
     try {
-      await api.delete(`/products/${productId}/`);
+      await api.delete(`/ecommerce/productos/${productId}/`);
       toast.success("Producto eliminado.");
       fetchProducts(page, query); // Recargar datos
     } catch (err) {
@@ -118,7 +126,17 @@ export default function Productos() {
   // Maneja los cambios en los inputs del formulario
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+	  if(name === 'stock_actual'){
+		setFormState((prev) => ({
+		  ...prev,
+		  stock: {
+			...prev.stock,
+			stock_actual: value
+		  }
+		}));
+	  }else{
+		setFormState((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+	  }
   };
   
   // Maneja la subida de la imagen
@@ -130,10 +148,12 @@ export default function Productos() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
+	console.log(formState);
 
     const isCreating = formMode === "create";
-    const url = isCreating ? "/products/" : `/products/${currentProduct.id}/`;
-    const method = isCreating ? 'post' : 'patch';
+    const url = isCreating ? "/ecommerce/productos/" : `/ecommerce/productos/${currentProduct.id}/`;
+    const method = isCreating ? 'post' : 'put';
+	  console.log(method);
     
     let dataPayload;
     const config = {};
@@ -200,7 +220,7 @@ export default function Productos() {
               <th className="px-6 py-3">#</th>
               <th className="px-6 py-3">Imagen</th>
               <th className="px-6 py-3">Nombre</th>
-              <th className="px-6 py-3">SKU</th>
+              <th className="px-6 py-3">Categoria</th>
               <th className="px-6 py-3">Precio</th>
               <th className="px-6 py-3">Stock</th>
               <th className="px-6 py-3">Estado</th>
@@ -218,20 +238,20 @@ export default function Productos() {
                   <td className="px-6 py-4 text-sm text-gray-500">{(page - 1) * 10 + index + 1}</td>
                   <td className="px-6 py-4">
                     {prod.image ? (
-                      <img src={prod.image} alt={prod.name} className="h-12 w-12 object-cover rounded-md" />
+                      <img src={prod.image} alt={prod.nombre} className="h-12 w-12 object-cover rounded-md" />
                     ) : (
                       <div className="h-12 w-12 flex items-center justify-center rounded-md bg-gray-100 text-gray-400">
                         <ImageIcon size={24} />
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-900">{prod.name}</td>
-                  <td className="px-6 py-4 text-gray-700">{prod.sku}</td>
-                  <td className="px-6 py-4 text-gray-700">${parseFloat(prod.price).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-gray-700">{prod.stock}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{prod.nombre}</td>
+                  <td className="px-6 py-4 text-gray-700">{prod.categoria}</td>
+                  <td className="px-6 py-4 text-gray-700">${parseFloat(prod.precio_venta).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-gray-700">{prod.stock_disponible}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${prod.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {prod.active ? "Activo" : "Inactivo"}
+                      {prod.disponible ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -264,7 +284,7 @@ export default function Productos() {
           <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-2xl animate-fade-in-down">
             <div className="flex items-center justify-between pb-3 border-b">
               <h3 className="text-xl font-semibold text-gray-800">
-                {formMode === "create" ? "Crear Nuevo Producto" : `Editar: ${currentProduct?.name}`}
+                {formMode === "create" ? "Crear Nuevo Producto" : `Editar: ${currentProduct?.nombre}`}
               </h3>
               <button onClick={resetFormAndClose} className="p-1 rounded-full hover:bg-gray-100"><X size={20} className="text-gray-600" /></button>
             </div>
@@ -272,23 +292,23 @@ export default function Productos() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                  <input id="name" name="name" value={formState.name} onChange={handleFormChange} placeholder="Ej: Laptop Pro" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" required />
+                  <input id="name" name="nombre" value={formState.nombre} onChange={handleFormChange} placeholder="Ej: Laptop Pro" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" required />
                 </div>
                 <div>
-                  <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                  <input id="sku" name="sku" value={formState.sku} onChange={handleFormChange} placeholder="Ej: LP-001" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
+                  <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                  <input id="sku" name="categoria_id" value={formState.categoria_id} onChange={handleFormChange} placeholder="Ej: LP-001" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
                 </div>
                 <div>
                   <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
-                  <input id="price" name="price" value={formState.price} onChange={handleFormChange} type="number" step="0.01" placeholder="Ej: 999.99" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
+                  <input id="price" name="precio_venta" value={formState.precio_venta} onChange={handleFormChange} type="number" step="0.01" placeholder="Ej: 999.99" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
                 </div>
                 <div>
                   <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-                  <input id="stock" name="stock" value={formState.stock} onChange={handleFormChange} type="number" placeholder="Ej: 50" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
+                  <input id="stock" name="stock_actual" value={formState.stock.stock_actual} onChange={handleFormChange} type="number" placeholder="Ej: 50" className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
                 </div>
                 <div className="md:col-span-2">
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                  <textarea id="description" name="description" value={formState.description} onChange={handleFormChange} rows="3" placeholder="Descripción detallada del producto..." className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
+                  <textarea id="description" name="descripcion" value={formState.descripcion} onChange={handleFormChange} rows="3" placeholder="Descripción detallada del producto..." className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Imagen</label>

@@ -69,7 +69,7 @@ export default function DashAdmin() {
       >
         {/* Logo en Sidebar */}
         <div className="flex items-center justify-center space-x-2 px-4 mb-8">
-          <img src="/logo.png" alt="Logo" className="h-9 w-9" />
+          <img src="/logoCRM.png" alt="Logo" className="h-9 w-9" />
           <span className="hidden md:block font-bold text-xl text-white">MiApp</span>
         </div>
 
