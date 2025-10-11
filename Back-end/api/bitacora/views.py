@@ -14,7 +14,7 @@ class BitacoraView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        queryset = Bitacora.objects.all().order_by('-timestamp')
+        queryset = Bitacora.objects.filter(tenant=request.tenant).order_by('-timestamp')
 
         # Filtering parameters
         fecha_inicio = request.query_params.get('fecha_inicio')

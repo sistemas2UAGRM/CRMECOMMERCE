@@ -21,10 +21,9 @@ class ProductoView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
-        queryset = Producto.objects.all().order_by('-created_at')
+        queryset = Producto.objects.filter(tenant=request.tenant).order_by('-created_at')
         user = request.user
         set_action_log(sender=self.__class__, user=user, action='read products', request=request)
-        productos = Producto.objects.all()
         # Pagination
         paginator = PageNumberPagination()
         paginator.page_size = 10

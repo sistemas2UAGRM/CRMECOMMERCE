@@ -22,7 +22,7 @@ class CategoriaView(APIView):
     def get(self, request):
         user = request.user
         set_action_log(sender=self.__class__, user=user, action='read categories', request=request)
-        categorias = Categoria.objects.all()
+        categorias = Categoria.objects.filter(tenant=request.tenant)
         serializer = CategoriaSerializer(categorias, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

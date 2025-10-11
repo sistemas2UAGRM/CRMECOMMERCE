@@ -9,8 +9,8 @@ class Migration(migrations.Migration):
     def create_initial_tenants(apps, schema_editor):
         Tenant.objects.create(name='localhost-1', domain='localhost', created_at=timezone.now())
         Tenant.objects.create(name='localhost-2', domain='127.0.0.1', created_at=timezone.now())
-        Tenant.objects.create(name='azure', domain='48.221.113.92', created_at=timezone.now())
-        Tenant.objects.create(name='frontend', domain='frontend', created_at=timezone.now())
+        Tenant.objects.create(name='azure-1', domain='48.221.113.92', created_at=timezone.now())
+        Tenant.objects.create(name='azure-2', domain='68.211.161.51', created_at=timezone.now())
 
     dependencies = [
         ('tenant', '0001_initial'),
