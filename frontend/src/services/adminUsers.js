@@ -14,7 +14,7 @@ import api from "./api";
  * - GET  /users/admin/{id}/activity_log/ -> bitacora
  */
 
-const BASE = "/users/admin/";
+const BASE = "/users/users/";
 
 export const adminListUsers = (params = {}) => api.get(BASE, { params });
 
