@@ -28,6 +28,7 @@ INSTALLED_APPS = [
 
     'apps.core',
     'apps.users',
+    'apps.ecommerce.productos',
 ]
 
 AUTH_USER_MODEL = 'users.User'
