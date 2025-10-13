@@ -20,6 +20,7 @@ Thumbs.db
 
 # Editores de código
 .vscode/
+.vs
 .idea/
 *.swp
 *.swo

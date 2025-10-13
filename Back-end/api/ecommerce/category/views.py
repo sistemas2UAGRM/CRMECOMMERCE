@@ -7,6 +7,16 @@ from api.bitacora.receivers import set_action_log
 from .serializer import CategoriaSerializer
 from .models import Categoria
 
+class CategoriasView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        set_action_log(sender=self.__class__, user=user, action='read categories', request=request)
+        categorias = Categoria.objects.filter(tenant=request.tenant)
+        serializer = CategoriaSerializer(categorias, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 class CategoriaView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -19,19 +29,27 @@ class CategoriaView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        user = request.user
-        set_action_log(sender=self.__class__, user=user, action='read categories', request=request)
-        categorias = Categoria.objects.filter(tenant=request.tenant)
-        serializer = CategoriaSerializer(categorias, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def patch(self, request, pk):
+        obj = Categoria.objects.get(id=pk)
+        serializer = CategoriaSerializer(obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            user = request.user
+            serializer.save(tenant=request.tenant)
+            set_action_log(sender=self.__class__, user=user, action=f'update category {pk}', request=request)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, pk):
+        categoria = Categoria.objects.get(id=pk)
+        serializer = CategoriaSerializer(categoria)
+        return Response(serializer.data)
 
     def delete(self, request, pk):
         user = request.user
         try:
             categoria = Categoria.objects.get(pk=pk)
         except Categoria.DoesNotExist:
-            return Response({"detail": "Category deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"detail": f"Error deleting category {pk}"}, status=status.HTTP_204_NO_CONTENT)
         
         categoria.delete()
         set_action_log(sender=self.__class__, user=user, action='delete category', request=request)
