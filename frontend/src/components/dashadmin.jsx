@@ -75,8 +75,8 @@ export default function DashAdmin() {
       >
         {/* Logo en Sidebar */}
         <div className="flex items-center justify-center space-x-2 px-4 mb-8">
-          <img src={logocrm} alt="Logo" className="h-9 w-9" />
-          <span className="hidden md:block font-bold text-xl text-white">ChambaSoft</span>
+          <img src="/logo.png" alt="Logo" className="h-9 w-9" />
+          <span className="hidden md:block font-bold text-xl text-white">MiApp</span>
         </div>
 
         <nav className="flex flex-col gap-4 px-2 flex-1">
