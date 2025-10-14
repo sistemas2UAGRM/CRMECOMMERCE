@@ -160,6 +160,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React
     "http://localhost:8080",  # Vue
     "http://localhost:4200",  # Angular
+    "http://localhost:4000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

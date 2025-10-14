@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 import logocrm from "../assets/logoCRM.png";
 
-import Productos from "../modulos/productos/producto";
+import Productos from "../modulos/productos/GestionProductos";
 import Empleados from "../modulos/empleados";
 import GestionCarritos from "../modulos/carrito/GestionCarritos";
 import Bitacora from "./Bitacora";
