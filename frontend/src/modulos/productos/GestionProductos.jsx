@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { useProductos } from "./hooks/useProductos";
 
-import ProductoCard from "./ProductoCard";
+import ProductoTable from "./ProductoTable";
 import Modal from "./Modal";
 import ProductoForm from "./ProductoForm";
-// Servicios
-import productosService from "../../services/productosService";
+
 import api from "../../services/api";
 
 export default function GestionProductos() {
@@ -26,7 +25,6 @@ export default function GestionProductos() {
     (async () => {
       try {
         const r1 = await api.get("/productos/categorias/");
-        // r1.data puede ser: Array o { results: Array, ... }
         const datos = r1.data;
         if (Array.isArray(datos)) {
           setCategorias(datos);
@@ -135,21 +133,16 @@ export default function GestionProductos() {
       {cargando && <div className="mb-4 text-gray-600">Cargando productos...</div>}
       {error && <div className="mb-4 text-red-600">Error al cargar productos</div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {productos && productos.length ? productos.map(p => (
-          <ProductoCard
-            key={p.id}
-            producto={p}
-            onVer={abrirDetalle}
-            onEditar={abrirEditar}
-            onEliminar={handleEliminar}
-          />
-        )) : (
-          <div className="col-span-full text-center text-gray-500 py-8">No hay productos para mostrar</div>
-        )}
-      </div>
+      {/* Tabla */}
+      <ProductoTable
+        productos={productos}
+        onVer={abrirDetalle}
+        onEditar={abrirEditar}
+        onEliminar={handleEliminar}
+        cargando={cargando}
+      />
 
-      {/* Paginación simple si meta está presente */}
+      {/* Paginación */}
       {meta && (
         <div className="mt-6 flex justify-between items-center">
           <div>Total: {meta.count}</div>
