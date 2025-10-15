@@ -45,8 +45,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     permission_classes = [EsAdminOSoloLectura]
-    lookup_field = "slug"
-
+    #lookup_field = "slug"
 
 class AlmacenViewSet(viewsets.ModelViewSet):
     queryset = Almacen.objects.all()

@@ -11,11 +11,14 @@ import logocrm from "../assets/logoCRM.png";
 import MenuHorizontal from "../components/MenuHorizontal";
 
 import Productos from "../modulos/productos/GestionProductos";
+import ProductosCategorias from "../modulos/productos/GestionCategoria";
 import Empleados from "../modulos/empleados";
 import GestionCarritos from "../modulos/carrito/GestionCarritos";
 import Bitacora from "./Bitacora";
 import UserProfile from "./UserProfile";
-import { clearAuthTokens } from "../utils/auth";
+
+import api from "../services/api"
+import { getRefreshToken, clearAuthTokens } from "../utils/auth";
 
 import UsersAdminList from "../modulos/usuarios/admin/UsersAdminList";
 
@@ -28,7 +31,7 @@ const sidebarItems = [
   { name: "Productos", icon: <Package size={22} />, component: <Productos />,
     subMenu: [
       { name: "Listado", component: <Productos /> },
-      { name: "Categorías", component: <div>Gestión de categorías</div> },
+      { name: "Categorías", component: < ProductosCategorias /> },
       { name: "Importar", component: <div>Importar productos (CSV)</div> },
     ],
   },
@@ -71,8 +74,24 @@ export default function DashAdmin() {
   const handleBackToDashboard = () => setShowProfile(false);
 
   // Logout
-  const handleLogout = () => {
-    if (window.confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+  const handleLogout = async () => {
+    if (!window.confirm("¿Estás seguro de que quieres cerrar sesión?")) return;
+    const refresh = getRefreshToken();
+
+    try {
+      // Si tienes refresh, intenta avisar al backend para blacklistearlo
+      if (refresh) {
+        await api.post("/users/logout/", { refresh });
+        // Si el access estaba expirado, el interceptor de api.js intentará refrescarlo y reintentar la petición.
+      } else {
+        console.warn("No se encontró refresh token en localStorage. Solo se limpiarán tokens locales.");
+      }
+    } catch (err) {
+      // No detenemos el logout por errores en el backend: igual limpiamos cliente.
+      // Ejemplos de fallos: refresh inválido, access expirado y refresh inválido, backend caído, etc.
+      console.warn("Error al llamar logout en backend:", err?.response?.data ?? err.message ?? err);
+    } finally {
+      // Siempre limpiar tokens y redirigir
       clearAuthTokens();
       alert("Sesión cerrada exitosamente");
       navigate("/login");

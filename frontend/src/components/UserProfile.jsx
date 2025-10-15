@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
-import { getAuthToken, clearAuthTokens, isTokenExpired } from '../utils/auth';
+import { getAuthToken, clearAuthTokens, isTokenExpiredError } from '../utils/auth';
 
 
 const UserProfile = ({ onBack }) => {
@@ -76,7 +76,7 @@ const UserProfile = ({ onBack }) => {
             setEditedData(data);
             setError('');
         } catch (error) {
-            if (isTokenExpired(error)) {
+            if (isTokenExpiredError(error)) {
                 setError('Sesión expirada. Por favor, inicie sesión nuevamente.');
                 clearAuthTokens();
             } else {
@@ -123,7 +123,7 @@ const UserProfile = ({ onBack }) => {
             // Limpiar mensaje después de 3 segundos
             setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
-            if (isTokenExpired(error)) {
+            if (isTokenExpiredError(error)) {
                 setError('Sesión expirada. Por favor, inicie sesión nuevamente.');
                 clearAuthTokens();
             } else {

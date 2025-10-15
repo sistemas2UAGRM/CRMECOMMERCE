@@ -10,8 +10,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
-
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.settings import api_settings as jwt_settings
 
 from .serializers import (
     UserBasicSerializer, UserDetailSerializer, UserRegistrationSerializer,
@@ -79,6 +80,7 @@ class LoginView(APIView):
 
             user.last_login = timezone.now()
             user.save(update_fields=['last_login'])
+            access_exp = (timezone.now() + jwt_settings.ACCESS_TOKEN_LIFETIME)
 
             if Bitacora:
                 Bitacora.objects.create(
@@ -94,6 +96,7 @@ class LoginView(APIView):
             return Response({
                 'access_token': str(access_token),
                 'refresh_token': str(refresh),
+                'access_expires_at': access_exp.isoformat(),
                 'user': {
                     'id': user.id,
                     'username': user.username,
@@ -113,6 +116,20 @@ class LoginView(APIView):
             return x_forwarded_for.split(',')[0]
         return request.META.get('REMOTE_ADDR')
 
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"detail": "Refresh token requerido."}, status=400)
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # requiere token_blacklist app
+            return Response({"detail": "Sesión cerrada."}, status=200)
+        except Exception as e:
+            return Response({"detail": "Token inválido o ya anulado."}, status=400)
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     permission_classes = [permissions.IsAuthenticated]
@@ -131,7 +148,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == 'profile':
             permission_classes = [permissions.IsAuthenticated]
         elif self.action in ['list', 'retrieve']:
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [permissions.IsAdminUser]
         else:
             permission_classes = [permissions.IsAdminUser]
         return [permission() for permission in permission_classes]

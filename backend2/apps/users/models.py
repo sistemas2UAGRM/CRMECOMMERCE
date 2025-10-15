@@ -2,7 +2,27 @@
 from django.db import models  
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
+from django.contrib.auth.base_user import BaseUserManager
 
+class UserManager(BaseUserManager):
+    use_in_migrations = True
+
+    def create_user(self, email, username, password=None, **extra_fields):
+        if not email:
+            raise ValueError("El email es obligatorio")
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, username, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        if not password:
+            raise ValueError('Superuser debe tener contraseña')
+        return self.create_user(email, username, password, **extra_fields)
+    
 class User(AbstractUser):
    SEXO_OPCIONES = (
         ('M', 'Masculino'),
@@ -33,6 +53,7 @@ class User(AbstractUser):
       related_name="user_permissions_custom", # Nombre único para la relación inversa
       related_query_name="user",
    )
+   objects = UserManager()
    # Hacemos que el email sea el campo para iniciar sesion
    USERNAME_FIELD = 'email'
    # Campos requeridos al crear un SUperoUsuario

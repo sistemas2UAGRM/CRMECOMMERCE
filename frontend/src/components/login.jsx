@@ -1,8 +1,9 @@
+// src/components/login.jsx
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import api from "../services/api";
 import { Link, useNavigate } from "react-router-dom";
-import { setAuthToken } from "../utils/auth";
+import { setAuthTokens, setUser } from "../utils/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,26 +16,31 @@ export default function Login() {
     try {
       const res = await api.post("/users/login/", { email, password });
 
-      // Maneja ambos formatos:
+      // Soportar distintos nombres de campo que podría devolver tu backend
       const access = res.data.access ?? res.data.access_token ?? res.data.token;
       const refresh = res.data.refresh ?? res.data.refresh_token;
-
-      console.log("Respuesta login:", res.data);
+      const user = res.data.user ?? null;
 
       if (!access) {
         setError("Respuesta de autenticación inválida (no vino token).");
         return;
       }
 
-      // Usar utilidad para guardar tokens de manera consistente
-      setAuthToken(access, refresh);
+      // Guardar tokens y usuario localmente (usa cookies httpOnly en producción si puedes)
+      setAuthTokens({ access, refresh });
+      if (user) setUser(user);
 
-      // Configurar axios para siguientes requests
+      // Configurar axios default
       api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
 
       setError("");
-      alert("Login exitoso");
-      navigate("/admin");
+      // Redirigir según rol devuelto por backend (groups es array de nombres)
+      const groups = user?.groups ?? [];
+      if (groups.includes("administrador")) {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       console.error("Error login:", err);
       const msg =

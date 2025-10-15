@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Clock, User, FileText, Globe, Search, Download, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getAuthToken, clearAuthTokens, isTokenExpired } from '../utils/auth';
+import { getAuthToken, clearAuthTokens, isTokenExpiredError } from '../utils/auth';
 
 const Bitacora = () => {
     // Estados principales
