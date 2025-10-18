@@ -1,13 +1,7 @@
 // src/modulos/productos/ProductoForm.jsx
 import React, { useState, useEffect } from "react";
-
-/*
- Props:
-  - productoInicial: objeto con datos (para editar)
-  - categoriasDisponibles: array {id, nombre} (opcional)
-  - onSubmit({ datos, imagenes }) -> Promise
-  - onCancelar()
-*/
+import api from "../../services/api"; // tu wrapper axios (añadido)
+ 
 export default function ProductoForm({ productoInicial = null, categoriasDisponibles = [], onSubmit, onCancelar }) {
   const [datos, setDatos] = useState({
     nombre: "",
@@ -25,12 +19,38 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
     meta_descripcion: ""
   });
 
-  // imagenes: array de { file, preview, texto_alt, es_principal, orden, existingUrl (opcional for edit) }
   const [imagenes, setImagenes] = useState([]);
+  const [almacenesDisponibles, setAlmacenesDisponibles] = useState([]);
+  const [almacenesStock, setAlmacenesStock] = useState({}); // { almacenId: cantidad }
+
+  useEffect(() => {
+    // cargar almacenes disponibles
+    (async () => {
+      try {
+        const r = await api.get("/productos/almacenes/");
+        const data = r.data;
+        const lista = Array.isArray(data) ? data : (data.results || []);
+        setAlmacenesDisponibles(lista);
+        // si hay producto inicial, mapear stocks si vienen
+        if (productoInicial && productoInicial.almacenes) {
+          const mapa = {};
+          productoInicial.almacenes.forEach(a => {
+            if (a.almacen && a.cantidad != null) {
+              mapa[a.almacen.id || a.almacen] = a.cantidad;
+            } else if (a.almacen && a.almacen.id) {
+              mapa[a.almacen.id] = a.cantidad;
+            }
+          });
+          setAlmacenesStock(mapa);
+        }
+      } catch (err) {
+        console.warn("No se pudieron cargar almacenes", err);
+      }
+    })();
+  }, [productoInicial]);
 
   useEffect(() => {
     if (productoInicial) {
-      // mapear categorías si vienen
       setDatos(prev => ({
         ...prev,
         nombre: productoInicial.nombre ?? "",
@@ -48,15 +68,14 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
         meta_descripcion: productoInicial.meta_descripcion ?? "",
       }));
 
-      // set imagenes existentes para previsualizar (solo visual; para editar se reenvían si se quiere)
       if (productoInicial.imagenes && productoInicial.imagenes.length) {
         setImagenes(productoInicial.imagenes.map((img, idx) => ({
           file: null,
-          preview: img.imagen,
+          preview: img.imagen_url || null,
           texto_alt: img.texto_alt ?? "",
           es_principal: img.es_principal ?? false,
           orden: img.orden ?? idx,
-          existingUrl: img.imagen
+          existingUrl: img.imagen_url
         })));
       }
     }
@@ -80,7 +99,7 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
       preview: URL.createObjectURL(file),
       texto_alt: file.name,
       es_principal: false,
-      orden: imagenes.length + idx
+      orden: imagenes.length + idx,
     }));
     setImagenes(prev => [...prev, ...nuevas]);
   };
@@ -88,7 +107,6 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
   const handleRemoveImage = (index) => {
     setImagenes(prev => {
       const copy = [...prev];
-      // revoke object URL if exists
       if (copy[index] && copy[index].preview && copy[index].file) {
         URL.revokeObjectURL(copy[index].preview);
       }
@@ -98,22 +116,58 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
   };
 
   const handleImageChange = (index, campo, valor) => {
-    setImagenes(prev => prev.map((it, i) => i === index ? { ...it, [campo]: valor } : it));
+    setImagenes(prev => {
+        let newImages = [...prev];
+        // Si se está marcando una imagen como principal
+        if (campo === "es_principal" && valor === true) {
+            // Desmarcar todas las demás
+            newImages = newImages.map(img => ({ ...img, es_principal: false }));
+        }
+        // Aplicar el cambio a la imagen específica
+        newImages[index] = { ...newImages[index], [campo]: valor };
+        return newImages;
+    });
+  };
+
+  const handleStockChange = (almacenId, value) => {
+    setAlmacenesStock(prev => ({ ...prev, [almacenId]: value }));
   };
 
   const submit = async (e) => {
     e.preventDefault();
-    // Validaciones simples
     if (!datos.nombre) return alert("Nombre requerido");
 
-    // Preparar payload conforme a productosService.buildProductoFormData
-    const payload = {
-      datos: { ...datos },
-      imagenes: imagenes.map(img => ({
-        file: img.file, texto_alt: img.texto_alt, es_principal: !!img.es_principal, orden: img.orden
-      }))
-    };
+    // 1. Separa los archivos nuevos de las imágenes existentes que se conservan
+    const nuevosArchivos = imagenes.filter(img => img.file).map(img => img.file);
+    
+    // 2. Recolecta las imágenes existentes que el usuario no eliminó
+    // Tu serializer espera el payload completo de la imagen para saber qué conservar
+    const imagenesExistentes = imagenes
+      .filter(img => img.existingUrl)
+      .map(img => ({
+        url: img.existingUrl,
+        texto_alt: img.texto_alt,
+        es_principal: img.es_principal,
+        orden: img.orden,
+      }));
 
+    // 3. Construye el payload de stock
+    const almacenes_stock = Object.entries(almacenesStock)
+      .map(([almacenId, cantidad]) => ({ 
+        almacen: Number(almacenId), 
+        cantidad: Number(cantidad || 0) 
+      }))
+      .filter(it => it.cantidad && it.cantidad > 0);
+
+    // 4. Prepara el payload final para la función onSubmit
+    // Esto coincide con lo que esperan tus funciones de servicio
+    const payload = {
+      datos: { ...datos }, // Enviamos stock dentro de datos
+      nuevosArchivos, // Los archivos nuevos
+      imagenesExistentes, // Las imágenes que ya estaban y se quedan
+      almacenes_stock,
+    };
+    
     await onSubmit(payload);
   };
 
@@ -149,8 +203,9 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
         </div>
 
         <div>
-          <label className="block text-sm">Stock (se maneja con almacenes, pero campo opcional)</label>
-          <input name="stock" disabled placeholder="Stock se calcula por almacenes" className="w-full border rounded p-2 bg-gray-50" />
+          <label className="block text-sm">Stock (se maneja con almacenes)</label>
+          <div className="text-xs text-gray-500">Introduce stock inicial por almacén en la sección abajo.</div>
+          <input name="stock" disabled placeholder="Stock se calcula por almacenes" className="w-full border rounded p-2 bg-gray-50 mt-1" />
         </div>
 
         <div>
@@ -164,7 +219,21 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
       </div>
 
       <div>
-        <label className="block text-sm">Imágenes (puedes agregar varias)</label>
+        <label className="block text-sm font-medium mb-2">Stock inicial por almacén (opcional)</label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {almacenesDisponibles.map(a => (
+            <div key={a.id} className="border p-2 rounded">
+              <div className="font-medium">{a.nombre}</div>
+              <div className="text-xs text-gray-500 mb-2">{a.codigo}</div>
+              <input type="number" min="0" value={almacenesStock[a.id] ?? ""} onChange={(e) => handleStockChange(a.id, e.target.value)} placeholder="Cantidad inicial" className="w-full border p-2 rounded" />
+            </div>
+          ))}
+          {almacenesDisponibles.length === 0 && <div className="text-sm text-gray-500">No hay almacenes configurados.</div>}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm">Imágenes (se subirán a Cloudinary)</label>
         <input type="file" accept="image/*" multiple onChange={handleAddImages} className="mt-2" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
           {imagenes.map((img, idx) => (

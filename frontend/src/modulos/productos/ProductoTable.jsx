@@ -32,14 +32,14 @@ export default function ProductoTable({ productos = [], onVer, onEditar, onElimi
               <td colSpan="8" className="px-4 py-6 text-center text-gray-500">Cargando productos...</td>
             </tr>
           ) : (productos && productos.length ? (
-            productos.map((p, idx) => (
+            productos.map((p) => (
               <tr key={p.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm text-gray-700">{idx + 1}</td>
+
                 <td className="px-4 py-3 text-sm text-gray-800">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden">
+                    <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                       <img
-                        src={(p.imagenes && p.imagenes.length && (p.imagenes.find(i => i.es_principal)?.imagen || p.imagenes[0].imagen)) || p.imagen || "/placeholder.png"}
+                        src={p.imagen_principal_url || "/placeholder.png"}
                         alt={p.nombre}
                         className="w-full h-full object-cover"
                       />
@@ -63,7 +63,7 @@ export default function ProductoTable({ productos = [], onVer, onEditar, onElimi
 
                 <td className="px-4 py-3 text-sm">
                   {p.activo ? <span className="inline-block px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">Sí</span>
-                              : <span className="inline-block px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded">No</span>}
+                            : <span className="inline-block px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded">No</span>}
                 </td>
 
                 <td className="px-4 py-3 text-right text-sm">

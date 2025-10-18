@@ -62,7 +62,14 @@ export default function GestionProductos() {
 
   const handleCrear = async (payload) => {
     try {
-      await crearProducto(payload);
+      // El 'payload' viene del formulario con { datos, nuevosArchivos }
+      // Lo pasamos directamente a la función del hook/servicio.
+      // Cambiamos el nombre de la prop de 'archivosDeImagenes' a 'nuevosArchivos' para ser consistentes.
+      await crearProducto({ 
+          datos: payload.datos, 
+          archivosDeImagenes: payload.nuevosArchivos,
+          almacenes_stock: payload.almacenes_stock 
+      });
       setAbiertoCrear(false);
       alert("Producto creado correctamente");
     } catch (err) {
@@ -74,10 +81,11 @@ export default function GestionProductos() {
 
   const handleEditar = async (payload) => {
     try {
+      // El 'payload' ahora contiene { datos, nuevosArchivos, imagenesExistentes }
       await editarProducto(productoEdit.id, payload);
       setProductoEdit(null);
       alert("Producto actualizado");
-    } catch (err) {
+    } catch (err){     
       console.error(err);
       const msg = err?.response?.data || err.message || "Error actualizando producto";
       alert(JSON.stringify(msg));
@@ -181,7 +189,7 @@ export default function GestionProductos() {
             <div className="grid grid-cols-2 gap-3 mb-3">
               {productoDetalle.imagenes && productoDetalle.imagenes.length ? (
                 productoDetalle.imagenes.map((img) => (
-                  <img key={img.id} src={img.imagen} alt={img.texto_alt} className="w-full h-40 object-cover rounded" />
+                  <img key={img.id} src={img.imagen_url} alt={img.texto_alt} className="w-full h-40 object-cover rounded" />
                 ))
               ) : (
                 <div className="col-span-full text-gray-500">Sin imágenes</div>

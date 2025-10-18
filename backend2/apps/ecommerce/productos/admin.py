@@ -1,6 +1,5 @@
 from django.contrib import admin
-
-from .models import Producto, Categoria, Almacen, ArticuloAlmacen, ImagenProducto
+from .models import Producto, Categoria, Almacen, ArticuloAlmacen, ImagenProducto, StockMovimiento
 
 class ImagenProductoInline(admin.TabularInline):
     model = ImagenProducto
@@ -25,3 +24,9 @@ class CategoriaAdmin(admin.ModelAdmin):
 class AlmacenAdmin(admin.ModelAdmin):
     list_display = ("nombre", "codigo", "activo")
     search_fields = ("nombre", "codigo")
+
+@admin.register(StockMovimiento)
+class StockMovimientoAdmin(admin.ModelAdmin):
+    list_display = ("producto", "almacen", "cantidad", "tipo", "usuario", "creado_en")
+    list_filter = ("tipo", "almacen")
+    readonly_fields = ("creado_en",)

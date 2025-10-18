@@ -1,8 +1,9 @@
 from django.db import models
-
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from django.conf import settings
+from django.core.exceptions import ValidationError
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=120, unique=True)
@@ -23,9 +24,6 @@ class Categoria(models.Model):
 
 
 class Almacen(models.Model):
-    """
-    Representa un almacén / ubicación física.
-    """
     nombre = models.CharField(max_length=150)
     codigo = models.CharField(max_length=50, unique=True)
     direccion = models.CharField(max_length=255, blank=True)
@@ -61,6 +59,17 @@ class Producto(models.Model):
     class Meta:
         ordering = ["-creado_en"]
 
+    @property
+    def imagen_principal_url(self):
+        imagen_principal = self.imagenes.filter(es_principal=True).first()
+        if imagen_principal:
+            return imagen_principal.image_url()
+        # Opcional: devolver la primera imagen si ninguna es principal
+        primera_imagen = self.imagenes.order_by('orden').first()
+        if primera_imagen:
+            return primera_imagen.image_url()
+        return "" # O una URL a una imagen por defecto
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base = slugify(self.nombre)[:240]
@@ -76,15 +85,13 @@ class Producto(models.Model):
         return f"{self.nombre} ({self.codigo})"
 
     def stock_total(self):
-        agg = self.articulos_almacen.aggregate(total=models.Sum("cantidad"))
-        return agg["total"] or 0
+        agg = self.articulos_almacen.aggregate(total=models.Sum("cantidad"), reservado=models.Sum("reservado"))
+        total = agg.get("total") or 0
+        reservado = agg.get("reservado") or 0
+        return max(0, total - reservado)
 
 
 class ArticuloAlmacen(models.Model):
-    """
-    Tabla intermedia entre Producto y Almacen:
-    guarda cantidad, reservado, lote, fecha de vencimiento, etc.
-    """
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name="articulos_almacen")
     almacen = models.ForeignKey(Almacen, on_delete=models.CASCADE, related_name="articulos")
     cantidad = models.IntegerField(default=0)
@@ -98,7 +105,7 @@ class ArticuloAlmacen(models.Model):
         ordering = ["-actualizado_en"]
 
     def disponible(self):
-        return max(0, self.cantidad - (self.reservado or 0))
+        return max(0, (self.cantidad or 0) - (self.reservado or 0))
 
     def __str__(self):
         return f"{self.producto.codigo} @ {self.almacen.codigo} = {self.cantidad}"
@@ -106,7 +113,8 @@ class ArticuloAlmacen(models.Model):
 
 class ImagenProducto(models.Model):
     producto = models.ForeignKey(Producto, related_name="imagenes", on_delete=models.CASCADE)
-    imagen = models.ImageField(upload_to="productos/%Y/%m/%d/")
+
+    imagen = models.ImageField(upload_to="boutique/productos", max_length=500, blank=True, null=True)
     texto_alt = models.CharField(max_length=200, blank=True)
     es_principal = models.BooleanField(default=False)
     orden = models.PositiveIntegerField(default=0)
@@ -114,5 +122,49 @@ class ImagenProducto(models.Model):
     class Meta:
         ordering = ["orden"]
 
+    def image_url(self):
+        if self.imagen:
+            return self.imagen.url
+        return ""
+    
+    def save(self, *args, **kwargs):
+        # Si esta imagen se marca como principal, desmarcar otras imágenes principales del producto
+        if self.es_principal:
+            ImagenProducto.objects.filter(producto=self.producto, es_principal=True).update(es_principal=False)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Imagen {self.producto.codigo} ({'principal' if self.es_principal else 'secundaria'})"
+
+
+class StockMovimiento(models.Model):
+    TIPO_CHOICES = (
+        ("entrada", "Entrada"),
+        ("salida", "Salida"),
+        ("ajuste", "Ajuste"),
+    )
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name="movimientos")
+    almacen = models.ForeignKey(Almacen, on_delete=models.CASCADE, related_name="movimientos")
+    cantidad = models.IntegerField()  # positivo para entradas, negativo para salidas
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    referencia = models.CharField(max_length=200, blank=True)
+    comentario = models.TextField(blank=True)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-creado_en"]
+
+    def clean(self):
+        # Validaciones: cantidad > 0 y tipo coherente
+        if self.cantidad is None or self.cantidad <= 0:
+            raise ValidationError("La cantidad debe ser un número positivo mayor que 0.")
+        if self.tipo not in dict(self.TIPO_CHOICES):
+            raise ValidationError("Tipo de movimiento inválido.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.tipo} {self.cantidad} {self.producto.codigo} @ {self.almacen.codigo}"
