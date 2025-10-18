@@ -15,7 +15,8 @@ export default function ProductoTable({ productos = [], onVer, onEditar, onElimi
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+            {/* Columna dedicada para la imagen */}
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Imagen</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">SKU</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
@@ -35,25 +36,26 @@ export default function ProductoTable({ productos = [], onVer, onEditar, onElimi
             productos.map((p) => (
               <tr key={p.id} className="hover:bg-gray-50">
 
-                <td className="px-4 py-3 text-sm text-gray-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      <img
-                        src={p.imagen_principal_url || "/placeholder.png"}
-                        alt={p.nombre}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <div className="font-medium">{p.nombre}</div>
-                      <div className="text-xs text-gray-500 hidden md:block truncate max-w-xs">{p.descripcion}</div>
-                    </div>
+                {/* Celda de la imagen */}
+                <td className="px-4 py-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                    <img
+                      src={p.imagen_principal_url || "/placeholder.png"}
+                      alt={p.nombre}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                </td>
+
+                {/* Celda del nombre */}
+                <td className="px-4 py-3 text-sm text-gray-800">
+                  <div className="font-medium">{p.nombre}</div>
+                  <div className="text-xs text-gray-500 hidden md:block truncate max-w-xs">{p.descripcion}</div>
                 </td>
 
                 <td className="px-4 py-3 text-sm text-gray-600 hidden sm:table-cell">{p.codigo ?? "-"}</td>
 
-                <td className="px-4 py-3 text-sm text-gray-800">Bs {p.precio ?? "-"}</td>
+                <td className="px-4 py-3 text-sm text-gray-800">{p.moneda} {p.precio ?? "-"}</td>
 
                 <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
                   {(p.categorias || []).map(c => c.nombre).join(", ") || "-"}

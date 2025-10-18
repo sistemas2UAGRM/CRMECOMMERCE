@@ -114,7 +114,7 @@ class ArticuloAlmacen(models.Model):
 class ImagenProducto(models.Model):
     producto = models.ForeignKey(Producto, related_name="imagenes", on_delete=models.CASCADE)
 
-    imagen = models.ImageField(upload_to="boutique/productos", max_length=500, blank=True, null=True)
+    imagen = models.URLField(max_length=500, blank=True, null=True)
     texto_alt = models.CharField(max_length=200, blank=True)
     es_principal = models.BooleanField(default=False)
     orden = models.PositiveIntegerField(default=0)
@@ -123,14 +123,11 @@ class ImagenProducto(models.Model):
         ordering = ["orden"]
 
     def image_url(self):
-        if self.imagen:
-            return self.imagen.url
-        return ""
+        return self.imagen or ""
     
     def save(self, *args, **kwargs):
-        # Si esta imagen se marca como principal, desmarcar otras imágenes principales del producto
         if self.es_principal:
-            ImagenProducto.objects.filter(producto=self.producto, es_principal=True).update(es_principal=False)
+            ImagenProducto.objects.filter(producto=self.producto, es_principal=True).exclude(pk=self.pk).update(es_principal=False)
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -4,12 +4,31 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css'
 import App from './App.jsx'
 import { ProductosProvider } from './modulos/productos/context/ProductosContext.jsx';
+import { Toaster } from 'react-hot-toast';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ProductosProvider>
         <App />
+        <Toaster
+          position="top-right" // Posición de las notificaciones
+          reverseOrder={false}
+          toastOptions={{
+            success: {
+              style: {
+                background: '#28a745', // Fondo verde
+                color: 'white',       // Texto blanco
+              },
+            },
+            error: {
+              style: {
+                background: '#dc3545', // Fondo rojo
+                color: 'white',       // Texto blanco
+              },
+            },
+          }}
+        />
       </ProductosProvider>
     </BrowserRouter>
   </StrictMode>,

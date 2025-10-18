@@ -8,29 +8,10 @@ class CategoriaSerializer(serializers.ModelSerializer):
         model = Categoria
         fields = ["id", "nombre", "slug", "descripcion"]
 
-
 class AlmacenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Almacen
         fields = ["id", "nombre", "codigo", "direccion", "telefono", "activo"]
-
-
-class ArticuloAlmacenSerializer(serializers.ModelSerializer):
-    almacen = AlmacenSerializer(read_only=True)
-    almacen_id = serializers.PrimaryKeyRelatedField(queryset=Almacen.objects.all(), source="almacen", write_only=True)
-    disponible = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ArticuloAlmacen
-        fields = [
-            "id", "almacen", "almacen_id", "cantidad", "reservado",
-            "lote", "fecha_vencimiento", "actualizado_en", "disponible"
-        ]
-        read_only_fields = ["actualizado_en", "disponible"]
-
-    def get_disponible(self, obj):
-        return obj.disponible()
-
 
 class ImagenProductoSerializer(serializers.ModelSerializer):
     imagen_url = serializers.SerializerMethodField()
@@ -41,9 +22,7 @@ class ImagenProductoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "imagen_url"]
 
     def get_imagen_url(self, obj):
-        if obj.imagen and hasattr(obj.imagen, 'url'):
-            return obj.imagen.url
-        return None
+        return obj.imagen or None
 
 class ProductoListSerializer(serializers.ModelSerializer):
     categorias = CategoriaSerializer(many=True, read_only=True)
@@ -58,6 +37,25 @@ class ProductoListSerializer(serializers.ModelSerializer):
 
     def get_imagen_principal_url(self, obj):
         return obj.imagen_principal_url
+
+class ArticuloAlmacenSerializer(serializers.ModelSerializer):
+    almacen = AlmacenSerializer(read_only=True)
+    almacen_id = serializers.PrimaryKeyRelatedField(queryset=Almacen.objects.all(), source="almacen", write_only=True)
+    disponible = serializers.SerializerMethodField()
+    producto = ProductoListSerializer(read_only=True)
+
+    class Meta:
+        model = ArticuloAlmacen
+        fields = [
+            "id", "almacen", "almacen_id", "cantidad", "reservado",
+            "lote", "fecha_vencimiento", "actualizado_en", "disponible",
+            "producto"
+        ]
+        read_only_fields = ["actualizado_en", "disponible"]
+
+    def get_disponible(self, obj):
+        return obj.disponible()
+
 
 class ProductoDetailSerializer(serializers.ModelSerializer):
     categorias = CategoriaSerializer(many=True, read_only=True)
@@ -92,7 +90,6 @@ class ProductoDetailSerializer(serializers.ModelSerializer):
         for img_data in imagenes_payload:
             ImagenProducto.objects.create(
                 producto=producto,
-                # Asignamos la URL recibida al campo 'imagen'
                 imagen=img_data.get("url"), 
                 texto_alt=img_data.get("texto_alt", ""),
                 es_principal=img_data.get("es_principal", False),

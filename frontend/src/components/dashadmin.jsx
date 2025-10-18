@@ -12,6 +12,8 @@ import MenuHorizontal from "../components/MenuHorizontal";
 
 import Productos from "../modulos/productos/GestionProductos";
 import ProductosCategorias from "../modulos/productos/GestionCategoria";
+import Almacenes from "../modulos/productos/almacenes/GestionAlmacenes";
+
 import Empleados from "../modulos/empleados";
 import GestionCarritos from "../modulos/carrito/GestionCarritos";
 import Bitacora from "./Bitacora";
@@ -32,6 +34,7 @@ const sidebarItems = [
     subMenu: [
       { name: "Listado", component: <Productos /> },
       { name: "Categorías", component: < ProductosCategorias /> },
+      { name: "Almacenes", component: <Almacenes /> },
       { name: "Importar", component: <div>Importar productos (CSV)</div> },
     ],
   },

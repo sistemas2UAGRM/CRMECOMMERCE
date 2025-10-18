@@ -1,11 +1,11 @@
 // src/modulos/productos/GestionProductos.jsx
 import React, { useState, useEffect } from "react";
 import { useProductos } from "./hooks/useProductos";
+import toast from "react-hot-toast";
 
 import ProductoTable from "./ProductoTable";
 import Modal from "./Modal";
 import ProductoForm from "./ProductoForm";
-
 import api from "../../services/api";
 
 export default function GestionProductos() {
@@ -18,29 +18,34 @@ export default function GestionProductos() {
   const [productoEdit, setProductoEdit] = useState(null);
   const [productoDetalle, setProductoDetalle] = useState(null);
   const [categorias, setCategorias] = useState([]);
+  const [almacenes, setAlmacenes] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
-    // Cargar categorías para el selector (normaliza paginación si existe)
-    (async () => {
+    // Cargar datos iniciales (categorías y almacenes)
+    const cargarDatosIniciales = async () => {
       try {
-        const r1 = await api.get("/productos/categorias/");
-        const datos = r1.data;
-        if (Array.isArray(datos)) {
-          setCategorias(datos);
-        } else if (datos && Array.isArray(datos.results)) {
-          setCategorias(datos.results);
-        } else {
-          // Si no es ninguno de los anteriores, intenta obtener keys con "cat"
-          console.warn("Respuesta inesperada al cargar categorias:", datos);
-          setCategorias([]);
-        }
+        const [resCategorias, resAlmacenes] = await Promise.all([
+          api.get("/productos/categorias/"),
+          api.get("/productos/almacenes/")
+        ]);
+        
+        const procesarRespuesta = (res, nombre) => {
+          const datos = res.data;
+          if (Array.isArray(datos)) return datos;
+          if (datos && Array.isArray(datos.results)) return datos.results;
+          console.warn(`Respuesta inesperada al cargar ${nombre}:`, datos);
+          return [];
+        };
+        setCategorias(procesarRespuesta(resCategorias, 'categorías'));
+        setAlmacenes(procesarRespuesta(resAlmacenes, 'almacenes'));
       } catch (err) {
-        console.warn("No se pudo cargar /productos/categorias/:", err);
+        console.warn("No se pudo cargar la configuración inicial:", err);
         setCategorias([]);
+        setAlmacenes([]);
       }
-    })();
-      // eslint-disable-next-line
+    };
+    cargarDatosIniciales();
   }, []);
 
 
@@ -48,59 +53,72 @@ export default function GestionProductos() {
   useEffect(() => {
     const cargar = async () => {
       try {
-        await obtenerProductos();
+        await obtenerProductos({ search: busqueda, page: pagina });
       } catch (e) {
         console.error("Error al obtener productos:", e);
       }
     };
     cargar();
     // eslint-disable-next-line
-  }, [pagina]);
+  }, [pagina, busqueda]);
 
-  const abrirEditar = (producto) => setProductoEdit(producto);
-  const abrirDetalle = (producto) => setProductoDetalle(producto);
+  const abrirEditar = async (producto) => {
+    try {
+      const response = await api.get(`/productos/productos/${producto.id}/`);
+      setProductoEdit(response.data);
+    } catch (error) {
+      console.error("Error al cargar los detalles del producto para editar:", error);
+      toast.error("No se pudieron cargar los datos del producto.");
+    }
+  };
 
+  const abrirDetalle = async (producto) => {
+        try {
+            const response = await api.get(`/productos/productos/${producto.id}/`);
+            setProductoDetalle(response.data);
+        } catch (error) {
+            console.error("Error al cargar los detalles del producto:", error);
+            toast.error("No se pudieron cargar los detalles del producto.");
+        }
+    };
+  
   const handleCrear = async (payload) => {
     try {
-      // El 'payload' viene del formulario con { datos, nuevosArchivos }
-      // Lo pasamos directamente a la función del hook/servicio.
-      // Cambiamos el nombre de la prop de 'archivosDeImagenes' a 'nuevosArchivos' para ser consistentes.
       await crearProducto({ 
           datos: payload.datos, 
           archivosDeImagenes: payload.nuevosArchivos,
           almacenes_stock: payload.almacenes_stock 
       });
       setAbiertoCrear(false);
-      alert("Producto creado correctamente");
+      toast.success("Producto creado exitosamente");
     } catch (err) {
       console.error(err);
       const msg = err?.response?.data || err.message || "Error creando producto";
-      alert(JSON.stringify(msg));
+      toast.error(msg);
     }
   };
 
   const handleEditar = async (payload) => {
     try {
-      // El 'payload' ahora contiene { datos, nuevosArchivos, imagenesExistentes }
       await editarProducto(productoEdit.id, payload);
       setProductoEdit(null);
-      alert("Producto actualizado");
+      toast.success("Producto actualizado exitosamente");
     } catch (err){     
       console.error(err);
-      const msg = err?.response?.data || err.message || "Error actualizando producto";
-      alert(JSON.stringify(msg));
+      const msg = err?.response?.data?.detail || err.message || "Error actualizando producto";
+      toast.error(msg);
     }
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm("¿Eliminar producto?")) return;
+    if (!window.confirm("¿Estás seguro de que quieres eliminar este producto?")) return;
     try {
       await eliminarProducto(id);
-      alert("Producto eliminado");
+      toast.success("Producto eliminado exitosamente");
     } catch (err) {
       console.error(err);
       const msg = err?.response?.data || err.message || "Error eliminando producto";
-      alert(JSON.stringify(msg));
+      toast.error(msg);
     }
   };
 
@@ -166,6 +184,7 @@ export default function GestionProductos() {
       <Modal abierto={abiertoCrear} titulo="Crear producto" onCerrar={() => setAbiertoCrear(false)}>
         <ProductoForm
           categoriasDisponibles={categorias}
+          almacenesDisponibles={almacenes}
           onSubmit={handleCrear}
           onCancelar={() => setAbiertoCrear(false)}
         />
@@ -175,6 +194,7 @@ export default function GestionProductos() {
         <ProductoForm
           productoInicial={productoEdit}
           categoriasDisponibles={categorias}
+          almacenesDisponibles={almacenes}
           onSubmit={handleEditar}
           onCancelar={() => setProductoEdit(null)}
         />
@@ -186,20 +206,20 @@ export default function GestionProductos() {
             <h3 className="font-semibold text-xl">{productoDetalle.nombre}</h3>
             <p className="text-sm text-gray-600 mb-2">{productoDetalle.descripcion}</p>
 
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              {productoDetalle.imagenes && productoDetalle.imagenes.length ? (
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {productoDetalle.imagenes && productoDetalle.imagenes.length > 0 ? (
                 productoDetalle.imagenes.map((img) => (
                   <img key={img.id} src={img.imagen_url} alt={img.texto_alt} className="w-full h-40 object-cover rounded" />
                 ))
               ) : (
                 <div className="col-span-full text-gray-500">Sin imágenes</div>
               )}
-            </div>
+              </div>
 
             <div className="mt-2 text-sm space-y-1">
-              <p><strong>Precio:</strong> Bs {productoDetalle.precio}</p>
+              <p><strong>Precio:</strong> {productoDetalle.moneda} {productoDetalle.precio}</p>
               <p><strong>Categorías:</strong> {(productoDetalle.categorias || []).map(c => c.nombre).join(", ")}</p>
-              <p><strong>Stock total:</strong> {productoDetalle.almacenes ? productoDetalle.almacenes.reduce((acc,a)=>acc + (a.cantidad||0),0) : productoDetalle.stock_total ?? 0}</p>
+              <p><strong>Stock total:</strong> {productoDetalle.stock_total ?? 0}</p>
             </div>
           </div>
         )}
