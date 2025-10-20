@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.ecommerce.productos',
     'apps.ecommerce.pedidos',
+    'apps.ecommerce.carritos',
+    'apps.ecommerce.pagos',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -66,6 +68,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'main.wsgi.application'
 
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -101,9 +106,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-MEDIA_URL = '/media/'  # O puedes usar la URL base de Cloudinary
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
+MEDIA_URL = '/media/'  
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Mantemos del anterior backend

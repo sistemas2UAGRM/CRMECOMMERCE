@@ -1,6 +1,6 @@
 import api from "./api";
 
-const ENDPOINT = "/productos/productos/";
+const ENDPOINT = "/ecommerce/productos/";
 
 // --- NUEVA FUNCIÓN AUXILIAR PARA SUBIR A CLOUDINARY ---
 /**

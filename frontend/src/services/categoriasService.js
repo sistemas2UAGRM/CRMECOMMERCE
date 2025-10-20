@@ -1,7 +1,7 @@
 // src/services/categoriasService.js
 import api from "./api";
 
-const ENDPOINT = "/productos/categorias/";
+const ENDPOINT = "/ecommerce/categorias/";
 
 const listar = async () => {
   const res = await api.get(ENDPOINT);

@@ -20,6 +20,9 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 
     path('api/users/', include('apps.users.urls')),
-    path('api/productos/', include('apps.ecommerce.productos.urls')),
-    path('api/pedidos/', include('apps.ecommerce.pedidos.urls')),
+    path('api/ecommerce/', include('apps.ecommerce.urls')),
+    #path('api/productos/', include('apps.ecommerce.productos.urls')),
+    #path('api/pedidos/', include('apps.ecommerce.pedidos.urls')),
+    #path('api/carrito/', include('apps.ecommerce.carritos.urls')),
+    #path('api/', include('apps.ecommerce.pagos.urls')),
 ]

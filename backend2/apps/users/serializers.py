@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from .models import UserProfile, Direccion
 
 User = get_user_model()  # Respetamos AUTH_USER_MODEL
 
@@ -19,19 +20,31 @@ class UserBasicSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip()
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['foto_perfil', 'preferencias_ui']
+
+class DireccionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Direccion
+        fields = '__all__'
+        read_only_fields = ['user'] # El usuario se asignará automáticamente
 
 class UserDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     rol_actual = serializers.SerializerMethodField()
     puede_editar_estado = serializers.SerializerMethodField()
+    profile = UserProfileSerializer()
+    direcciones = DireccionSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name',
                   'full_name', 'fecha_de_nacimiento', 'sexo', 'celular',
                   'is_active', 'date_joined', 'last_login', 'rol_actual',
-                  'puede_editar_estado']
-        read_only_fields = ['id', 'date_joined', 'last_login']
+                  'puede_editar_estado', 'profile', 'direcciones'] 
+        read_only_fields = ['id', 'date_joined', 'last_login', 'direcciones']
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip()
@@ -48,6 +61,17 @@ class UserDetailSerializer(serializers.ModelSerializer):
             return request.user.groups.filter(name='administrador').exists()
         return False
 
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('profile', None)
+        instance = super().update(instance, validated_data)
+
+        if profile_data:
+            profile = instance.profile
+            for attr, value in profile_data.items():
+                setattr(profile, attr, value)
+            profile.save()
+            
+        return instance
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})

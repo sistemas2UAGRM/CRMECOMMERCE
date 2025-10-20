@@ -3,7 +3,7 @@ import Login from "../components/login";
 import Register from "../components/registraruser";
 import Dashboard from '../components/dashboard';
 import DashAdmin from "../components/dashadmin";
-import DashCliente from "../components/dashcliente";
+import DashCliente from "../modulos/usuarios/clientes/dashcliente";
 import Carrito from "../modulos/carrito/carrito";
 import Perfiles from "../modulos/usuarios/perfiles";
 import RequireAuth from "../components/RequireAuth";

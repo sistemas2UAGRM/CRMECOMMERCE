@@ -26,8 +26,8 @@ export default function GestionProductos() {
     const cargarDatosIniciales = async () => {
       try {
         const [resCategorias, resAlmacenes] = await Promise.all([
-          api.get("/productos/categorias/"),
-          api.get("/productos/almacenes/")
+          api.get("/ecommerce/categorias/"),
+          api.get("/ecommerce/almacenes/")
         ]);
         
         const procesarRespuesta = (res, nombre) => {
@@ -64,7 +64,7 @@ export default function GestionProductos() {
 
   const abrirEditar = async (producto) => {
     try {
-      const response = await api.get(`/productos/productos/${producto.id}/`);
+      const response = await api.get(`/ecommerce/productos/${producto.id}/`);
       setProductoEdit(response.data);
     } catch (error) {
       console.error("Error al cargar los detalles del producto para editar:", error);
@@ -74,7 +74,7 @@ export default function GestionProductos() {
 
   const abrirDetalle = async (producto) => {
         try {
-            const response = await api.get(`/productos/productos/${producto.id}/`);
+            const response = await api.get(`/ecommerce/productos/${producto.id}/`);
             setProductoDetalle(response.data);
         } catch (error) {
             console.error("Error al cargar los detalles del producto:", error);

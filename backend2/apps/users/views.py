@@ -17,8 +17,9 @@ from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from .serializers import (
     UserBasicSerializer, UserDetailSerializer, UserRegistrationSerializer,
     AdminUserRegistrationSerializer, LoginSerializer, UserSearchSerializer,
-    UserStatsSerializer
+    UserStatsSerializer, DireccionSerializer
 )
+from .models import Direccion
 
 User = get_user_model()
 
@@ -237,3 +238,20 @@ class UserViewSet(viewsets.ModelViewSet):
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0]
         return request.META.get('REMOTE_ADDR')
+
+class DireccionViewSet(viewsets.ModelViewSet):
+    serializer_class = DireccionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Esta vista solo debe devolver las direcciones del usuario
+        actualmente autenticado.
+        """
+        return self.request.user.direcciones.all()
+
+    def perform_create(self, serializer):
+        """
+        Asigna el usuario actual a la dirección al crearla.
+        """
+        serializer.save(user=self.request.user)

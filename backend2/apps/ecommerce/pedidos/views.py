@@ -45,6 +45,43 @@ class PedidoViewSet(viewsets.ModelViewSet):
         pedido.save()
         return Response({'status': 'pedido marcado como pagado'})
 
+    @action(detail=True, methods=['post'], url_path='iniciar-pago')
+    def iniciar_pago(self, request, pk=None):
+        """
+        Crea un PaymentIntent de Stripe para el pedido.
+        """
+        pedido = self.get_object()
+        if pedido.pagado:
+            return Response({'error': 'Este pedido ya ha sido pagado.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Stripe maneja montos en la unidad monetaria más pequeña (ej. centavos)
+            monto_en_centavos = int(pedido.total * 100)
+            
+            intent = stripe.PaymentIntent.create(
+                amount=monto_en_centavos,
+                currency='usd', # O la moneda que corresponda
+                metadata={
+                    'pedido_id': pedido.id,
+                    'cliente_username': pedido.cliente.username
+                }
+            )
+            
+            # Crear un registro de pago preliminar
+            Pago.objects.create(
+                pedido=pedido,
+                id_transaccion_proveedor=intent.id,
+                monto=pedido.total,
+                moneda='USD'
+            )
+            
+            return Response({
+                'clientSecret': intent.client_secret
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class DetallePedidoViewSet(viewsets.ModelViewSet):
     queryset = DetallePedido.objects.all().select_related('producto', 'pedido')
     serializer_class = DetallePedidoSerializer

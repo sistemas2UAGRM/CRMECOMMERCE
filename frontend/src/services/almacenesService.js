@@ -1,5 +1,5 @@
 import api from "./api";
-const ENDPOINT = "/productos/almacenes/";
+const ENDPOINT = "/ecommerce/almacenes/";
 
 const listar = async () => {
   const res = await api.get(ENDPOINT);
