@@ -1,6 +1,5 @@
 // src/modulos/productos/ProductoForm.jsx
 import React, { useState, useEffect } from "react";
-import api from "../../services/api"; // tu wrapper axios (añadido)
 import almacenesService from "../../services/almacenesService"; // servicio de almacenes (añadido)
 import toast from "react-hot-toast";
 
@@ -29,8 +28,6 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
     // cargar almacenes disponibles
     (async () => {
       try {
-        //const r = await api.get("/ecommerce/almacenes/");
-        //const data = r.data;
         const data = await almacenesService.listar();
         const lista = Array.isArray(data) ? data : (data.results || []);
         setAlmacenesDisponibles(lista);

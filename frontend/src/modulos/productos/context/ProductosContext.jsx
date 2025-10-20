@@ -1,5 +1,5 @@
 // src/modulos/productos/context/ProductosContext.jsx
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import productosService from "../../../services/productosService";
 
 export const ProductosContext = createContext();
@@ -14,20 +14,18 @@ export const ProductosProvider = ({ children }) => {
   const [pageSize, setPageSize] = useState(12);
   const [meta, setMeta] = useState(null); // si tu API devuelve count/next/previous
 
-  const obtenerProductos = async (params = {}) => {
+  const obtenerProductos = useCallback(async (params = {}) => {
     setCargando(true);
     setError(null);
     try {
-      const data = await productosService.listar({ page: pagina, page_size: pageSize, ...params });
-      // Soporta respuestas tipo DRF paginadas ({ results, count, next, previous })
-      if (Array.isArray(data)) {
-        setProductos(data);
-        setMeta(null);
-      } else if (data.results) {
+      // Asumiendo que `listar` acepta un objeto de parámetros
+      const data = await productosService.listar({ page: pagina, ...params });
+      if (data.results) {
         setProductos(data.results);
         setMeta({ count: data.count, next: data.next, previous: data.previous });
       } else {
-        setProductos(data);
+        setProductos(Array.isArray(data) ? data : []);
+        setMeta(null);
       }
     } catch (err) {
       setError(err);
@@ -35,14 +33,9 @@ export const ProductosProvider = ({ children }) => {
     } finally {
       setCargando(false);
     }
-  };
+  }, [pagina]);
 
-  useEffect(() => {
-    obtenerProductos();
-    // eslint-disable-next-line
-  }, [pagina, pageSize]);
-
-  const crearProducto = async (payload) => {
+  const crearProducto = useCallback(async (payload) => {
     setCargando(true);
     try {
       const nuevo = await productosService.crear(payload);
@@ -55,9 +48,9 @@ export const ProductosProvider = ({ children }) => {
     } finally {
       setCargando(false);
     }
-  };
+  }, []);
 
-  const editarProducto = async (id, payload) => {
+  const editarProducto = useCallback(async (id, payload) => {
     setCargando(true);
     try {
       const actualizado = await productosService.actualizar(id, payload);
@@ -69,9 +62,9 @@ export const ProductosProvider = ({ children }) => {
     } finally {
       setCargando(false);
     }
-  };
+  }, []);
 
-  const eliminarProducto = async (id) => {
+  const eliminarProducto = useCallback(async (id) => {
     setCargando(true);
     try {
       await productosService.eliminar(id);
@@ -82,7 +75,11 @@ export const ProductosProvider = ({ children }) => {
     } finally {
       setCargando(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    obtenerProductos();
+  }, [obtenerProductos]);
 
   return (
     <ProductosContext.Provider value={{

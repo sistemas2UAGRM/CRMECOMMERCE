@@ -56,11 +56,11 @@ export default function GestionProductos() {
         await obtenerProductos({ search: busqueda, page: pagina });
       } catch (e) {
         console.error("Error al obtener productos:", e);
+        toast.error("No se pudieron cargar los productos.");
       }
     };
     cargar();
-    // eslint-disable-next-line
-  }, [pagina, busqueda]);
+  }, [pagina, busqueda, obtenerProductos]);
 
   const abrirEditar = async (producto) => {
     try {

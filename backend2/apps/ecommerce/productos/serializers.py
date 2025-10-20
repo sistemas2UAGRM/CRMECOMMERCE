@@ -73,6 +73,7 @@ class ProductoDetailSerializer(serializers.ModelSerializer):
     almacenes_stock = serializers.ListField(
         child=serializers.JSONField(), write_only=True, required=False
     )
+    stock_total = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Producto
@@ -80,9 +81,10 @@ class ProductoDetailSerializer(serializers.ModelSerializer):
             "id", "codigo", "nombre", "slug", "descripcion", "precio", "costo", "moneda",
             "peso", "dimensiones", "activo", "destacado", "categorias", "categoria_ids",
             "imagenes", "imagenes_payload", # <-- Añadir imagenes_payload
-            "almacenes_stock", "almacenes", "creado_en", "actualizado_en", "meta_titulo", "meta_descripcion"
+            "almacenes_stock", "almacenes", "creado_en", "actualizado_en", "meta_titulo", 
+            "meta_descripcion", "stock_total"
         ]
-        read_only_fields = ["creado_en", "actualizado_en", "slug", "imagenes"]
+        read_only_fields = ["creado_en", "actualizado_en", "slug", "imagenes", "stock_total"]
 
     def _create_or_update_imagenes(self, producto, imagenes_payload):
         # Borramos las imágenes existentes para simplificar la lógica de actualización
