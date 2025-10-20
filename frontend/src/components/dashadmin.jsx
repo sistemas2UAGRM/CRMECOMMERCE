@@ -22,11 +22,11 @@ import UserProfile from "./UserProfile";
 import api from "../services/api"
 import { getRefreshToken, clearAuthTokens } from "../utils/auth";
 
-import UsersAdminList from "../modulos/usuarios/admin/UsersAdminList";
+import GestionUsuarios from "../modulos/usuarios/admin/GestionUsuarios";
 
 /* ------------------ Configuración del sidebar (tu original) ------------------ */
 const sidebarItems = [
-  { name: "Usuarios", icon: <Users size={22} />, component: <UsersAdminList /> },
+  { name: "Usuarios", icon: <Users size={22} />, component: <GestionUsuarios /> },
   { name: "Empleados", icon: <UserCheck size={22} />, component: <Empleados /> },
   { name: "Bitácora", icon: <FileText size={22} />, component: <Bitacora /> },
   { name: "Perfiles", icon: <Shield size={22} />, component: <div>Contenido de Perfiles</div> },

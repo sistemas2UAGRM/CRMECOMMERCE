@@ -1,3 +1,4 @@
+//src/modulos/usuarios/clientes/components/Profile.jsx
 import React from 'react';
 
 const Profile = () => {

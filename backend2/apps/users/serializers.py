@@ -33,7 +33,7 @@ class DireccionSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
-    rol_actual = serializers.SerializerMethodField()
+    rol_actual = serializers.SerializerMethodField(read_only=True)
     puede_editar_estado = serializers.SerializerMethodField()
     profile = UserProfileSerializer()
     direcciones = DireccionSerializer(many=True, read_only=True)

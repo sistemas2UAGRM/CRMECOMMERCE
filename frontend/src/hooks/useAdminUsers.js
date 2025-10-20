@@ -5,7 +5,7 @@ import {
   adminDeleteUser,
   adminActivateUser,
   adminDeactivateUser
-} from "../services/adminUsers";
+} from "../services/usersService";
 
 /**
  * Hook para listar usuarios administracion (paginación DRF page)

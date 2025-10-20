@@ -1,3 +1,4 @@
+//src/modulos/usuarios/clientes/ProductoLista.jsx
 import React, { useState, useEffect } from 'react';
 import productosService from '../../../services/productosService'; // ¡Importa tu servicio!
 

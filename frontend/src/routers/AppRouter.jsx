@@ -5,7 +5,6 @@ import Dashboard from '../components/dashboard';
 import DashAdmin from "../components/dashadmin";
 import DashCliente from "../modulos/usuarios/clientes/dashcliente";
 import Carrito from "../modulos/carrito/carrito";
-import Perfiles from "../modulos/usuarios/perfiles";
 import RequireAuth from "../components/RequireAuth";
 
 export default function AppRouter() {
@@ -14,7 +13,6 @@ export default function AppRouter() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Register />} />
-      <Route path="/perfiles" element={<Perfiles />} />
       <Route path="/admin" element={<DashAdmin />} />
       <Route path="/dashboard" element={<DashCliente />} />
 
