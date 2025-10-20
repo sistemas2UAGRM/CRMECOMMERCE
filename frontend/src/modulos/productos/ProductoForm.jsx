@@ -1,7 +1,9 @@
 // src/modulos/productos/ProductoForm.jsx
 import React, { useState, useEffect } from "react";
 import api from "../../services/api"; // tu wrapper axios (añadido)
- 
+import almacenesService from "../../services/almacenesService"; // servicio de almacenes (añadido)
+import toast from "react-hot-toast";
+
 export default function ProductoForm({ productoInicial = null, categoriasDisponibles = [], onSubmit, onCancelar }) {
   const [datos, setDatos] = useState({
     nombre: "",
@@ -27,8 +29,9 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
     // cargar almacenes disponibles
     (async () => {
       try {
-        const r = await api.get("/productos/almacenes/");
-        const data = r.data;
+        //const r = await api.get("/ecommerce/almacenes/");
+        //const data = r.data;
+        const data = await almacenesService.listar();
         const lista = Array.isArray(data) ? data : (data.results || []);
         setAlmacenesDisponibles(lista);
         // si hay producto inicial, mapear stocks si vienen
@@ -45,6 +48,7 @@ export default function ProductoForm({ productoInicial = null, categoriasDisponi
         }
       } catch (err) {
         console.warn("No se pudieron cargar almacenes", err);
+        toast.error("No se pudieron cargar los almacenes disponibles.");
       }
     })();
   }, [productoInicial]);

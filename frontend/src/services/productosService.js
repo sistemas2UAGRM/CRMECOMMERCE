@@ -2,15 +2,13 @@ import api from "./api";
 
 const ENDPOINT = "/ecommerce/productos/";
 
-// --- NUEVA FUNCIÓN AUXILIAR PARA SUBIR A CLOUDINARY ---
 /**
  * Sube un archivo directamente a Cloudinary después de obtener una firma del backend.
  * @param {File} file - El archivo a subir.
  * @returns {Promise<string>} - La URL segura de la imagen subida.
  */
 const uploadImageToCloudinary = async (file) => {
-  // 1. Pedir la firma a nuestro backend
-  const signResponse = await api.post('/productos/cloudinary/sign/', { 
+  const signResponse = await api.post('/ecommerce/cloudinary/sign/', { 
     folder: 'boutique/productos' 
   });
   const signData = signResponse.data;
