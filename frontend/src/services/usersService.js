@@ -5,7 +5,7 @@ import api from "./api";
 const BASE = "/users/users/"; 
 
 // Esta URL para crear es CORRECTA según tu apps/users/urls.py
-const CREAR_ADMIN_URL = "/users/admin-register/";
+const CREAR_ADMIN_URL = "/users/auth/signup/";
 
 /**
  * Obtiene la lista paginada de usuarios.

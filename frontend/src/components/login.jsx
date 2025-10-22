@@ -14,7 +14,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/users/login/", { email, password });
+      const res = await api.post("/users/auth/login/", { email, password });
 
       // Soportar distintos nombres de campo que podría devolver tu backend
       const access = res.data.access ?? res.data.access_token ?? res.data.token;

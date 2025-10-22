@@ -69,7 +69,7 @@ api.interceptors.response.use(
 
       try {
         // Llamada directa al endpoint de refresh (no usar la instancia api para evitar loop)
-        const resp = await axios.post(`${'http://127.0.0.1:8000/api'}/token/refresh/`, { refresh });
+        const resp = await axios.post(`${'http://127.0.0.1:8000/api'}/users/token/refresh/`, { refresh });
         const newAccess = resp.data.access;
         const newRefresh = resp.data.refresh ?? refresh; // si rota refresh tokens, actualízalo
 
