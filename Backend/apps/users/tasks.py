@@ -21,8 +21,7 @@ def send_verification_email_task(self, user_id):
     """
     Tarea Celery para enviar email de verificación.
     Requiere en settings:
-    - MAILGUN_API_KEY
-    - MAILGUN_DOMAIN
+    - MAILCHIMP_API_KEY
     - DEFAULT_FROM_EMAIL
     - SITE_URL (ej: https://mi-dominio.com)
     """
@@ -44,33 +43,57 @@ def send_verification_email_task(self, user_id):
     html_body = render_to_string('emails/verify_email.html', {'user': user, 'verify_url': verify_url})
 
     # Preferimos usar Mailgun HTTP API
-    MAILGUN_API_KEY = getattr(settings, 'MAILGUN_API_KEY', None)
-    MAILGUN_DOMAIN = getattr(settings, 'MAILGUN_DOMAIN', None)
-    FROM = getattr(settings, 'DEFAULT_FROM_EMAIL', f"no-reply@{MAILGUN_DOMAIN or 'localhost'}")
+    MANDRILL_API_KEY = getattr(settings, 'MAILGUN_API_KEY', None)
+    FROM_EMAIL = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@tu-dominio.com')
+    FROM_NAME = getattr(settings, 'DEFAULT_FROM_NAME', 'Tu Tienda')
 
-    if not MAILGUN_API_KEY or not MAILGUN_DOMAIN:
+    if not MAILGUN_API_KEY:
         # Si no está Mailgun configurado, intentar enviar con Django (fallback)
         from django.core.mail import EmailMultiAlternatives
-        msg = EmailMultiAlternatives(subject, text_body, FROM, [user.email])
+        msg = EmailMultiAlternatives(subject, text_body, FROM_EMAIL, [user.email])
         msg.attach_alternative(html_body, "text/html")
         msg.send(fail_silently=True)
         return {'status': 'sent_via_django'}
 
+    # Construir el payload JSON que Mandrill espera
+    payload = {
+        'key': MANDRILL_API_KEY,
+        'message': {
+            'html': html_body,
+            'text': text_body,
+            'subject': subject,
+            'from_email': FROM_EMAIL,
+            'from_name': FROM_NAME,
+            'to': [
+                {
+                    'email': user.email,
+                    'name': user.get_full_name() or user.username,
+                    'type': 'to'
+                }
+            ],
+            'important': False,
+            'track_opens': True,
+            'track_clicks': True,
+        },
+        'async': False # Lo ponemos síncrono para que la tarea Celery sepa si falló
+    }
+
     try:
         response = requests.post(
-            f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages",
-            auth=("api", MAILGUN_API_KEY),
-            data={
-                "from": FROM,
-                "to": [user.email],
-                "subject": subject,
-                "text": text_body,
-                "html": html_body
-            },
+            'https://mandrillapp.com/api/1.0/messages/send.json',
+            json=payload, # <--- Usamos 'json' en lugar de 'data'
             timeout=10
         )
         response.raise_for_status()
-        return {'status': 'sent', 'provider': 'mailgun', 'code': response.status_code}
+        
+        # Mandrill devuelve una lista, comprobamos el estado del primer (y único) email
+        result = response.json()
+        if result[0]['status'] in ['sent', 'queued']:
+            return {'status': result[0]['status'], 'provider': 'mandrill'}
+        else:
+            # Si Mandrill lo rechazó (ej. 'rejected')
+            raise requests.RequestException(f"Mandrill rejected email: {result[0]['reject_reason']}")
+
     except requests.RequestException as exc:
         # Reintentar con backoff
         try:

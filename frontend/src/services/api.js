@@ -2,14 +2,20 @@ import axios from "axios";
 import { getAuthToken, getRefreshToken, setAuthTokens, clearAuthTokens } from '../utils/auth';
 
 const api = axios.create({
-  //baseURL: "http://127.0.0.1:8000/api/v1", // tu backend Django
   baseURL: "http://127.0.0.1:8000/api",
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-const PUBLIC_PATHS = ['/login/', '/register/', '/token/refresh/', '/token/verify/'];
+const PUBLIC_PATHS = [
+  '/users/auth/login/',
+  '/users/auth/signup/',
+  '/users/auth/verify/',
+  '/users/auth/resend-verification/',
+  '/users/token/refresh/',
+  '/users/token/verify/',
+];
 
 // Request interceptor: añade Authorization si corresponde
 api.interceptors.request.use((config) => {

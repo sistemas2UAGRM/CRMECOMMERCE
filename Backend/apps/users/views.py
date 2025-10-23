@@ -31,6 +31,7 @@ from .serializers import (
     UserListSerializer, UserDetailSerializer, UserSignupSerializer, 
     LoginSerializer, UserAdminListSerializer,
     UserStatisticsSerializer, DireccionSerializer, 
+    AdminCreateUserSerializer
 )
 from .models import Direccion
 
@@ -231,7 +232,28 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserListSerializer
         elif self.action in ['retrieve', 'update', 'partial_update', 'profile']:
             return UserDetailSerializer
+        elif self.action == 'create':
+            return AdminCreateUserSerializer
         return UserListSerializer
+    
+    def create(self, request, *args, **kwargs):
+        """
+        Sobrescribe el método 'create' para usar el serializer de admin.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        if Bitacora:
+            ip = self._get_client_ip(request)
+            Bitacora.objects.create(
+                accion=f"Admin creó nuevo usuario: {user.email}",
+                ip=ip,
+                usuario=request.user # El admin que hizo la acción
+            )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_permissions(self):
         if self.action == 'profile':
