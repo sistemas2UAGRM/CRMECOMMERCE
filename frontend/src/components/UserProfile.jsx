@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
-import { getAuthToken, clearAuthTokens, isTokenExpiredError } from '../utils/auth';
+import api from '../services/api';
+import { clearAuthTokens } from '../utils/auth';
 
 
 const UserProfile = ({ onBack }) => {
@@ -47,42 +48,23 @@ const UserProfile = ({ onBack }) => {
     const fetchProfile = async () => {
         try {
             setLoading(true);
-            const token = getAuthToken();
-
-            if (!token) {
-                setError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
-                return;
-            }
-
-            const response = await fetch('http://localhost:8000/api/v1/users/profile/me/', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    setError('Sesión expirada. Por favor, inicie sesión nuevamente.');
-                    clearAuthTokens();
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-                return;
-            }
-
-            const data = await response.json();
+            const response = await api.get('/users/profile/me/');
+            const data = response.data;
             setProfileData(data);
             setEditedData(data);
             setError('');
-        } catch (error) {
-            if (isTokenExpiredError(error)) {
+        } catch (err) {
+            console.error('Error fetching profile:', err);
+            if (err.response?.status === 401) {
                 setError('Sesión expirada. Por favor, inicie sesión nuevamente.');
                 clearAuthTokens();
             } else {
-                setError('Error al cargar el perfil: ' + error.message);
+                const msg =
+                    err.response?.data?.detail ||
+                    err.response?.data?.message ||
+                    'Error al cargar el perfil';
+                setError(msg);
             }
-            console.error('Error fetching profile:', error);
         } finally {
             setLoading(false);
         }
@@ -95,26 +77,9 @@ const UserProfile = ({ onBack }) => {
             setError('');
             setSuccess('');
 
-            const token = getAuthToken();
-            if (!token) {
-                setError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
-                return;
-            }
-            const response = await fetch('http://localhost:8000/api/v1/users/profile/me/', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(editedData)
-            });
+            const response = await api.put('/users/profile/me/', editedData);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(JSON.stringify(errorData));
-            }
-
-            const data = await response.json();
+            const data = response.data;
             setProfileData(data);
             setEditedData(data);
             setIsEditing(false);
@@ -122,12 +87,17 @@ const UserProfile = ({ onBack }) => {
 
             // Limpiar mensaje después de 3 segundos
             setTimeout(() => setSuccess(''), 3000);
-        } catch (error) {
-            if (isTokenExpiredError(error)) {
+        } catch (err) {
+            console.error('Error saving profile:', err);
+            if (err.response?.status === 401) {
                 setError('Sesión expirada. Por favor, inicie sesión nuevamente.');
                 clearAuthTokens();
             } else {
-                setError('Error al actualizar el perfil: ' + error.message);
+                const msg =
+                    err.response?.data?.detail ||
+                    JSON.stringify(err.response?.data) ||
+                    'Error al actualizar el perfil';
+                setError(msg);
             }
         } finally {
             setSaving(false);
@@ -145,43 +115,23 @@ const UserProfile = ({ onBack }) => {
             // Validaciones básicas
             if (!passwordData.current_password || !passwordData.new_password || !passwordData.new_password_confirm) {
                 setPasswordErrors({ general: 'Todos los campos son requeridos' });
+                setSaving(false);
                 return;
             }
 
             if (passwordData.new_password !== passwordData.new_password_confirm) {
                 setPasswordErrors({ confirm: 'Las contraseñas nuevas no coinciden' });
+                setSaving(false);
                 return;
             }
 
             if (passwordData.new_password.length < 8) {
                 setPasswordErrors({ new: 'La nueva contraseña debe tener al menos 8 caracteres' });
+                setSaving(false);
                 return;
             }
 
-            const token = getAuthToken();
-            if (!token) {
-                setPasswordErrors({ general: 'No se encontró token de autenticación. Por favor, inicie sesión nuevamente.' });
-                return;
-            }
-            const response = await fetch('http://localhost:8000/api/v1/users/profile/change-password/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(passwordData)
-            });
-
-            const responseData = await response.json();
-
-            if (!response.ok) {
-                if (responseData.error) {
-                    setPasswordErrors({ general: responseData.error });
-                } else {
-                    setPasswordErrors({ general: 'Error al cambiar la contraseña' });
-                }
-                return;
-            }
+            await api.post('/users/profile/change-password/', passwordData);
 
             // Limpiar formulario y mostrar éxito
             setPasswordData({
@@ -194,8 +144,26 @@ const UserProfile = ({ onBack }) => {
 
             // Limpiar mensaje después de 3 segundos
             setTimeout(() => setSuccess(''), 3000);
-        } catch (error) {
-            setPasswordErrors({ general: 'Error al cambiar la contraseña: ' + error.message });
+        } catch (err) {
+            console.error('Error changing password:', err);
+            const errors = err.response?.data;
+            if (errors) {
+                const newErrors = {};
+                for (const key in errors) {
+                    if (Array.isArray(errors[key])) {
+                        // Para errores como 'new_password' o 'current_password'
+                        newErrors[key] = errors[key].join(' ');
+                    }
+                }
+                if (errors.detail) newErrors.general = errors.detail;
+                if (errors.error) newErrors.general = errors.error;
+                if (Object.keys(newErrors).length === 0) {
+                    newErrors.general = 'Error al cambiar la contraseña.';
+                }
+                setPasswordErrors(newErrors);
+            } else {
+                setPasswordErrors({ general: 'Error al cambiar la contraseña.' });
+            }
         } finally {
             setSaving(false);
         }

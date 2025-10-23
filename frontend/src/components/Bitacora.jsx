@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Clock, User, FileText, Globe, Search, Download, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getAuthToken, clearAuthTokens, isTokenExpiredError } from '../utils/auth';
+import api from '../services/api';
 
 const Bitacora = () => {
     // Estados principales
@@ -31,44 +31,31 @@ const Bitacora = () => {
     const fetchLogs = async (page = 1) => {
         try {
             setLoading(true);
-            const token = getAuthToken();
 
-            if (!token) {
-                setError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
-                return;
-            } let url = `http://localhost:8000/api/v1/common/bitacora/?page=${page}`;
+            const params = {
+                page,
+            };
+            if (filters.fechaInicio) params.fecha_inicio = filters.fechaInicio;
+            if (filters.fechaFin) params.fecha_fin = filters.fechaFin;
+            if (filters.usuario) params.usuario_id = filters.usuario;
+            if (filters.accion) params.accion_contiene = filters.accion;
+            if (filters.ip) params.ip = filters.ip;
 
-            // Agregar filtros a la URL
-            const queryParams = [];
-            if (filters.fechaInicio) queryParams.push(`fecha_inicio=${filters.fechaInicio}`);
-            if (filters.fechaFin) queryParams.push(`fecha_fin=${filters.fechaFin}`);
-            if (filters.usuario) queryParams.push(`usuario_id=${filters.usuario}`);
-            if (filters.accion) queryParams.push(`accion_contiene=${filters.accion}`);
-            if (filters.ip) queryParams.push(`ip=${filters.ip}`);
+            const response = await api.get('/common/bitacora/', { params });
 
-            if (queryParams.length > 0) {
-                url += `&${queryParams.join('&')}`;
-            }
-
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Error al obtener los datos de bitácora');
-            }
-
-            const data = await response.json();
+            const data = response.data;
             setLogs(data.results || []);
             setFilteredLogs(data.results || []);
             setTotalItems(data.count || 0);
             setError('');
-        } catch (error) {
-            setError('Error al cargar los datos: ' + error.message);
-            console.error('Error fetching logs:', error);
+        } catch (err) {
+            console.error("Error fetching logs:", err);
+            const msg =
+                err.response?.data?.detail ||
+                err.response?.data?.message ||
+                JSON.stringify(err.response?.data) ||
+                "Error al cargar los datos";
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -117,22 +104,12 @@ const Bitacora = () => {
     // Función para exportar datos
     const exportData = async (format = 'json') => {
         try {
-            const token = getAuthToken();
-            if (!token) {
-                alert('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
-                return;
-            }
-            const response = await fetch(`http://localhost:8000/api/v1/common/export/?format=${format}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                }
+            const response = await api.get(`/common/export/`, {
+                params: { format },
+                responseType: 'blob',
             });
 
-            if (!response.ok) {
-                throw new Error('Error al exportar datos');
-            }
-
-            const blob = await response.blob();
+            const blob = response.data;
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
@@ -141,9 +118,14 @@ const Bitacora = () => {
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Error exporting data:', error);
-            alert('Error al exportar datos: ' + error.message);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error('Error exporting data:', err);
+            const msg =
+                err.response?.data?.detail ||
+                err.response?.data?.message ||
+                'Error al exportar datos';
+            alert(msg);
         }
     };
 
