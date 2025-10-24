@@ -147,7 +147,7 @@ export default function DashAdmin() {
           <Link to="/" className="flex items-center gap-3" onClick={() => setSidebarAbierto(false)}>
             <img src={logocrm} alt="Logo" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain" />
             {/* MEJORA: Eliminado 'hidden' para que 'MiApp' se vea en el menú móvil */}
-            <span className="font-bold text-xl">MiApp</span>
+            <span className="font-bold text-xl">ChambaSoft</span>
           </Link>
 
           {/* Botón cerrar sólo visible mobile dentro del panel */}
