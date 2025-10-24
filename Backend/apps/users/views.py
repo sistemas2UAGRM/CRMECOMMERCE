@@ -221,7 +221,7 @@ class UserViewSet(viewsets.ModelViewSet):
     - acción 'profile' para que el usuario edite su propio perfil
     - acciones auxiliares: search, active, by_role, stats
     """
-    queryset = User.objects.all().order_by('-date_joined')
+    queryset = User.objects.all().order_by('-date_joined').prefetch_related('groups')
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['username', 'email', 'first_name', 'last_name']
@@ -229,12 +229,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'list':
-            return UserListSerializer
+            return UserAdminListSerializer
         elif self.action in ['retrieve', 'update', 'partial_update', 'profile']:
             return UserDetailSerializer
         elif self.action == 'create':
             return AdminCreateUserSerializer
-        return UserListSerializer
+        return UserAdminListSerializer
     
     def create(self, request, *args, **kwargs):
         """

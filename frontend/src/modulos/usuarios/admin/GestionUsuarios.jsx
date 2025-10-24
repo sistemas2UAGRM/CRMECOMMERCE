@@ -106,6 +106,7 @@ export default function GestionUsuarios() {
         onEditar={abrirModalEditar}
         onEliminar={handleEliminar}
         onToggleActive={handleToggleActive}
+        cargando={cargando}
       />
 
       {/* Paginación */}

@@ -417,7 +417,10 @@ class UserAdminListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'role']
+        fields = ['id', 'username', 'email', 'first_name', 
+                  'last_name', 'is_active', 'role', 'fecha_de_nacimiento',
+                  'sexo', 'celular', 'is_verified'
+        ]
 
     def get_role(self, obj):
         grupo = obj.groups.first()
