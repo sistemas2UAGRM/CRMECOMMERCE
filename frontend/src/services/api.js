@@ -20,7 +20,7 @@ const PUBLIC_PATHS = [
 // Request interceptor: añade Authorization si corresponde
 api.interceptors.request.use((config) => {
   const url = config.url || '';
-  const isPublic = PUBLIC_PATHS.some(p => url.endsWith(p) || url.includes(p));
+  const isPublic = PUBLIC_PATHS.some(p => url === p || url.startsWith(p));
   if (!isPublic) {
     const token = getAuthToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -28,7 +28,7 @@ api.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// --- Refresh token logic (cola para peticiones concurrentes) ---
+// --- Lógica de Refresh token ---
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -44,24 +44,21 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
     if (!originalRequest) return Promise.reject(error);
 
     const status = error.response?.status;
+    const url = originalRequest.url || '';
 
     // Si 401 y la petición no fue el endpoint de refresh
-    if (status === 401 && !originalRequest._retry && !(originalRequest.url?.includes('/token/refresh/'))) {
+    if (status === 401 && !originalRequest._retry && !PUBLIC_PATHS.some(p => url === p)) {
       const refresh = getRefreshToken();
       if (!refresh) {
-        // no hay refresh -> forzar logout
         clearAuthTokens();
-        // redirigir a login (usa router si lo prefieres)
         window.location.href = '/login';
         return Promise.reject(error);
       }
 
       if (isRefreshing) {
-        // estamos refrescando: devolver promesa que se resolverá cuando termine
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         }).then((token) => {
@@ -75,14 +72,13 @@ api.interceptors.response.use(
 
       try {
         // Llamada directa al endpoint de refresh (no usar la instancia api para evitar loop)
-        const resp = await axios.post(`${'http://127.0.0.1:8000/api'}/users/token/refresh/`, { refresh });
+        //const resp = await axios.post(`${'http://127.0.0.1:8000/api'}/users/token/refresh/`, { refresh });
+        const resp = await axios.post(`${api.defaults.baseURL}/users/token/refresh/`, { refresh });
         const newAccess = resp.data.access;
-        const newRefresh = resp.data.refresh ?? refresh; // si rota refresh tokens, actualízalo
+        const newRefresh = resp.data.refresh ?? refresh; 
 
         // Guardar tokens nuevos
         setAuthTokens({ access: newAccess, refresh: newRefresh });
-
-        // Actualizar cabecera default y la cabecera original
         api.defaults.headers.common['Authorization'] = 'Bearer ' + newAccess;
         originalRequest.headers['Authorization'] = 'Bearer ' + newAccess;
 
