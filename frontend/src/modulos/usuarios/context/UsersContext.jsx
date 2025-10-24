@@ -11,14 +11,15 @@ export const UsersProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [meta, setMeta] = useState(null); // Para paginación
 
-  const obtenerUsuarios = useCallback(async (params = {}) => {
+  const obtenerUsuarios = useCallback(async (params = { page: 1, search: "" }) => {
     setCargando(true);
     setError(null);
     try {
       const data = await usersService.listar(params);
-      setUsuarios(data.results || []);
-      setMeta({ count: data.count, next: data.next, previous: data.previous });
+      setUsuarios(data.results || data);
+      setMeta({ count: data.count ?? null, next: !!data.next, previous: !!data.previous });
     } catch (err) {
+      console.error("Error al obtener usuarios:", err);
       setError(err);
       toast.error("Error al cargar usuarios.");
     } finally {
@@ -30,20 +31,17 @@ export const UsersProvider = ({ children }) => {
     setCargando(true);
     try {
       const nuevo = await usersService.crearPorAdmin(payload);
-      const nuevo2 = await usersService.adminCreateUser(payload);
-      // Opcional: recargar la lista para ver el nuevo usuario
-      await obtenerUsuarios(); 
+      setUsuarios(prev => [nuevo, ...prev]);
       toast.success("Usuario creado exitosamente.");
       return nuevo;
-      
     } catch (err) {
-      setError(err);
-      toast.error(err.response?.data?.detail || "Error al crear usuario.");
-      throw err; // Relanzamos para que el formulario pueda manejarlo
+      console.error("Error al crear usuario:", err);
+      toast.error("Error al crear usuario.");
+      throw err; 
     } finally {
       setCargando(false);
     }
-  }, [obtenerUsuarios]);
+  }, []);
 
   const actualizarUsuario = useCallback(async (id, payload) => {
     setCargando(true);
@@ -53,8 +51,8 @@ export const UsersProvider = ({ children }) => {
       toast.success("Usuario actualizado.");
       return actualizado;
     } catch (err) {
-      setError(err);
-      toast.error(err.response?.data?.detail || "Error al actualizar.");
+      console.error("Error al actualizar usuario:", err);
+      toast.error("Error al actualizar.");
       throw err;
     } finally {
       setCargando(false);
@@ -68,7 +66,7 @@ export const UsersProvider = ({ children }) => {
       setUsuarios(prev => prev.filter(u => u.id !== id));
       toast.success("Usuario eliminado.");
     } catch (err) {
-      setError(err);
+      console.error("Error al eliminar usuario:", err);
       toast.error("Error al eliminar usuario.");
       throw err;
     } finally {
@@ -76,10 +74,41 @@ export const UsersProvider = ({ children }) => {
     }
   }, []);
 
+  const buscarUsuarios = useCallback(async (q) => {
+    setCargando(true);
+    try {
+      const data = await usersService.buscar(q);
+      setUsuarios(data.results || data);
+      setMeta({
+        count: data.count ?? null,
+        next: !!data.next,
+        previous: !!data.previous,
+      });
+      return data;
+    } catch (err) {
+      console.error("buscarUsuarios:", err);
+      toast.error("Error en búsqueda.");
+      throw err;
+    } finally {
+      setCargando(false);
+    }
+  }, []);
+
+  const obtenerStats = useCallback(async () => {
+    try {
+      const s = await usersService.obtenerStats();
+      return s;
+    } catch (err) {
+      console.error("obtenerStats:", err);
+      throw err;
+    }
+  }, []);
+
   return (
     <UsersContext.Provider value={{
       usuarios, cargando, error, meta,
-      obtenerUsuarios, crearUsuario, actualizarUsuario, eliminarUsuario
+      obtenerUsuarios, crearUsuario, actualizarUsuario, 
+      eliminarUsuario, buscarUsuarios, obtenerStats
     }}>
       {children}
     </UsersContext.Provider>

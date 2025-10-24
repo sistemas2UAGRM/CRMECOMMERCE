@@ -20,7 +20,7 @@ const INITIAL_FORM_STATE = {
     password: "",
     confirmPassword: "",
     is_active: true,
-    groups: [], // Para asignar roles
+    role: "", // Rol del usuario (administrador o cliente)
 };
 
 // Opciones para el campo sexo
@@ -33,18 +33,17 @@ const SEXO_OPTIONS = [
 // Mapeo de roles para mostrar nombres más amigables
 const ROLE_DISPLAY = {
     'administrador': { name: 'Administrador', color: 'bg-red-100 text-red-800' },
-    'empleadonivel1': { name: 'Supervisor', color: 'bg-yellow-100 text-yellow-800' },
-    'empleadonivel2': { name: 'Vendedor', color: 'bg-green-100 text-green-800' },
     'cliente': { name: 'Cliente', color: 'bg-blue-100 text-blue-800' },
-    'empleado': { name: 'Empleado', color: 'bg-purple-100 text-purple-800' },
 };
 
-// Roles permitidos en el módulo de empleados
-const EMPLOYEE_ROLES = ['administrador', 'empleado'];
+// Roles disponibles en el sistema (solo administrador y cliente)
+const AVAILABLE_ROLES = [
+    { id: 'administrador', name: 'administrador', label: 'Administrador' },
+    { id: 'cliente', name: 'cliente', label: 'Cliente' }
+];
 
 export default function Empleados() {
     const [employees, setEmployees] = useState([]);
-    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [pageInfo, setPageInfo] = useState({ next: null, previous: null, count: 0 });
     const [page, setPage] = useState(1);
@@ -115,21 +114,9 @@ export default function Empleados() {
         }
     };
 
-    // Función para obtener los roles disponibles
-    const fetchRoles = async () => {
-        try {
-            const { data } = await api.get("/users/roles/");
-            setRoles(data.roles || []);
-        } catch (err) {
-            console.error("Error al cargar roles:", err);
-            toast.error("Error al cargar roles.");
-        }
-    };
-
-    // Carga inicial de empleados y roles
+    // Carga inicial de empleados
     useEffect(() => {
         fetchEmployees(1, "");
-        fetchRoles();
     }, []);
 
     // Efecto para aplicar filtros automáticamente
@@ -173,6 +160,9 @@ export default function Empleados() {
 
     // Abre el modal para editar un empleado existente
     const openEditModal = (employee) => {
+        // Obtener el rol del empleado (primer grupo)
+        const userRole = employee.role?.[0]?.name || '';
+
         setFormState({
             username: employee.username || "",
             email: employee.email || "",
@@ -184,7 +174,7 @@ export default function Empleados() {
             password: "",
             confirmPassword: "",
             is_active: employee.is_active ?? true,
-            groups: employee.groups?.map(group => group.id) || [],
+            role: userRole, // Guardar el nombre del rol directamente
         });
         setCurrentEmployee(employee);
         setFormMode("edit");
@@ -220,12 +210,6 @@ export default function Empleados() {
         const { name, value, type, checked } = e.target;
         if (type === 'checkbox' && name === 'is_active') {
             setFormState(prev => ({ ...prev, [name]: checked }));
-        } else if (name === 'role') {
-            // Manejo del dropdown de rol - un solo rol
-            setFormState(prev => ({
-                ...prev,
-                groups: value ? [parseInt(value)] : []
-            }));
         } else {
             setFormState(prev => ({ ...prev, [name]: value }));
         }
@@ -237,8 +221,8 @@ export default function Empleados() {
         setFormError(null);
 
         // Validaciones básicas
-        if (formState.groups.length === 0) {
-            setFormError("Debe seleccionar un rol para el empleado.");
+        if (!formState.role) {
+            setFormError("Debe seleccionar un rol para el usuario.");
             return;
         }
 
@@ -253,22 +237,12 @@ export default function Empleados() {
         }
 
         const isCreating = formMode === "create";
-        const url = isCreating ? "/api/users/users/" : `/api/users/users/${currentEmployee.id}/`;
+        const url = isCreating ? "/users/users/" : `/users/users/${currentEmployee.id}/`;
         const method = isCreating ? 'post' : 'patch';
 
         // Preparar datos para enviar
         const dataPayload = { ...formState };
         delete dataPayload.confirmPassword; // No enviar confirmación de contraseña
-
-        // Convertir groups (IDs) a rol (nombre del rol) para el backend
-        if (dataPayload.groups && dataPayload.groups.length > 0) {
-            const roleId = dataPayload.groups[0];
-            const role = roles.find(r => r.id === roleId);
-            if (role) {
-                dataPayload.rol = role.name;
-            }
-        }
-        delete dataPayload.groups; // No enviar groups, solo rol
 
         // Si es edición y no se cambió la contraseña, no enviarla
         if (!isCreating && !dataPayload.password) {
@@ -277,7 +251,7 @@ export default function Empleados() {
 
         try {
             const response = await api[method](url, dataPayload);
-            toast.success(`Empleado ${isCreating ? "creado" : "actualizado"} con éxito.`);
+            toast.success(`Usuario ${isCreating ? "creado" : "actualizado"} con éxito.`);
             resetFormAndClose();
             fetchEmployees(isCreating ? 1 : page, query);
         } catch (err) {
@@ -294,9 +268,9 @@ export default function Empleados() {
                         .join(' | ');
                     setFormError(`Error: ${errorMessages}`);
                 } else {
-                    setFormError("Error al guardar el empleado. Revisa los datos.");
+                    setFormError("Error al guardar el usuario. Revisa los datos.");
                 }
-                toast.error("Error al guardar el empleado.");
+                toast.error("Error al guardar el usuario.");
             }
         }
     };
@@ -309,12 +283,11 @@ export default function Empleados() {
 
     // Función para obtener los roles del empleado
     const getEmployeeRoles = (employee) => {
-        if (!employee.groups || employee.groups.length === 0) {
+        console.log(employee)
+        if (!employee.role || employee.role.length === 0) {
             return [{ name: 'Sin rol', color: 'bg-gray-100 text-gray-800' }];
         }
-        return employee.groups.map(group =>
-            ROLE_DISPLAY[group.name] || { name: group.name, color: 'bg-gray-100 text-gray-800' }
-        );
+        return [{ name: `${employee.role}`, color: 'bg-gray-100 text-gray-800' }];
     };
 
     return (
@@ -377,13 +350,11 @@ export default function Empleados() {
                                 className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2e7e8b] focus:border-[#2e7e8b]"
                             >
                                 <option value="">Todos los roles</option>
-                                {roles
-                                    .filter(role => EMPLOYEE_ROLES.includes(role.name))
-                                    .map(role => (
-                                        <option key={role.id} value={role.name}>
-                                            {ROLE_DISPLAY[role.name]?.name || role.name}
-                                        </option>
-                                    ))}
+                                {AVAILABLE_ROLES.map(role => (
+                                    <option key={role.id} value={role.name}>
+                                        {role.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -415,13 +386,13 @@ export default function Empleados() {
                     <tbody className="divide-y divide-gray-200">
                         {loading ? (
                             <tr>
-                                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
                                     Cargando empleados...
                                 </td>
                             </tr>
                         ) : employees.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
                                     No se encontraron empleados
                                 </td>
                             </tr>
@@ -450,12 +421,6 @@ export default function Empleados() {
                                         <div className="flex items-center text-sm text-gray-900">
                                             <Mail className="h-4 w-4 mr-2 text-gray-400" />
                                             {employee.email}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center text-sm text-gray-900">
-                                            <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                                            {employee.celular || "No especificado"}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
@@ -674,38 +639,30 @@ export default function Empleados() {
                                     </select>
                                 </div>
 
-                                {/* Rol del empleado */}
+                                {/* Rol del usuario */}
                                 <div>
-                                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">Rol del empleado *</label>
+                                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">Rol del usuario *</label>
                                     <select
                                         id="role"
                                         name="role"
-                                        value={formState.groups[0] || ''}
+                                        value={formState.role || ''}
                                         onChange={handleFormChange}
                                         className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2e7e8b] focus:border-transparent"
                                         required
                                     >
                                         <option value="">Selecciona un rol</option>
-                                        {roles
-                                            .filter(role => EMPLOYEE_ROLES.includes(role.name))
-                                            .map(role => (
-                                                <option key={role.id} value={role.id}>
-                                                    {ROLE_DISPLAY[role.name]?.name || role.name}
-                                                </option>
-                                            ))}
+                                        {AVAILABLE_ROLES.map(role => (
+                                            <option key={role.id} value={role.name}>
+                                                {role.label}
+                                            </option>
+                                        ))}
                                     </select>
-                                    {formState.groups.length === 0 && (
+                                    {!formState.role && (
                                         <p className="text-xs text-red-500 mt-1">* Debe seleccionar un rol</p>
                                     )}
-                                    {formState.groups.length > 0 && (
+                                    {formState.role && (
                                         <p className="text-xs text-green-600 mt-1">
-                                            ✓ Rol seleccionado: {
-                                                (() => {
-                                                    const roleId = formState.groups[0];
-                                                    const role = roles.find(r => r.id === roleId);
-                                                    return role ? (ROLE_DISPLAY[role.name]?.name || role.name) : 'Rol no encontrado';
-                                                })()
-                                            }
+                                            ✓ Rol seleccionado: {ROLE_DISPLAY[formState.role]?.name || formState.role}
                                         </p>
                                     )}
                                 </div>

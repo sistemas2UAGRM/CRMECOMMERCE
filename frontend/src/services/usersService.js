@@ -17,8 +17,8 @@ const detalle = async (id) => {
   return res.data;
 };
 
-/*** Crea un nuevo usuario desde el panel de administración.
- * (POST: /api/users/admin-register/)*/
+/*** (Admin) Crea un nuevo usuario desde el panel de admin.
+ * (POST: /api/users/users/)*/
 const crearPorAdmin = async (datos) => {
   const res = await api.post(`${BASE_URL}`, datos);
   return res.data;
@@ -39,8 +39,8 @@ const eliminar = async (id) => {
   await api.delete(`${BASE_URL}${id}/`);
 };
 
-/*** Obtiene estadísticas de usuarios.
- * (GET: /api/users/stats/ - Asumiendo que está en /api/users/stats/) */
+/*** (Admin) Obtiene estadísticas de usuarios.
+ * (GET: /api/users/users/stats/) */
 const obtenerStats = async () => {
     const res = await api.get(`${BASE_URL}stats/`);
     return res.data;
