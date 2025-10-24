@@ -5,7 +5,7 @@ const ENDPOINT_BASE = '/ecommerce/carrito';
 
 // GET /api/ecommerce/carrito/
 const obtenerMiCarrito = async () => {
-    const response = await api.get(`${ENDPOINT_BASE}/`);
+    const response = await api.get(`${ENDPOINT_BASE}/`); // Ajuste para usar la ruta completa del backend
     return response.data;
 };
 
@@ -28,9 +28,16 @@ const crearPedidoDesdeCarrito = async (direccionEnvio) => {
     return response.data;
 };
 
+// POST /api/ecommerce/carrito/crear_pedido/
+const crearPedido = async () => {
+    const response = await api.post(`${ENDPOINT_BASE}/crear_pedido/`);
+    return response.data;
+};
+
 export default {
     obtenerMiCarrito,
     agregarItem,
     eliminarItem,
     crearPedidoDesdeCarrito,
+    crearPedido, // Agregar la función para crear pedidos
 };

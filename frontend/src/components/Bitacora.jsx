@@ -41,7 +41,9 @@ const Bitacora = () => {
             if (filters.accion) params.accion_contiene = filters.accion;
             if (filters.ip) params.ip = filters.ip;
 
-            const response = await api.get('/common/bitacora/', { params });
+            // TODO: Implementar endpoint en el backend para la bitácora
+            // const response = await api.get('/common/bitacora/', { params });
+            const response = { data: { results: [], count: 0 } }; // Datos de ejemplo
 
             const data = response.data;
             setLogs(data.results || []);
@@ -104,10 +106,13 @@ const Bitacora = () => {
     // Función para exportar datos
     const exportData = async (format = 'json') => {
         try {
-            const response = await api.get(`/common/export/`, {
-                params: { format },
-                responseType: 'blob',
-            });
+            // TODO: Implementar endpoint en el backend para exportar
+            // const response = await api.get(`/common/export/`, {
+            //     params: { format },
+            //     responseType: 'blob',
+            // });
+            alert('Funcionalidad de exportar no implementada en el backend.');
+            return;
 
             const blob = response.data;
             const url = window.URL.createObjectURL(blob);

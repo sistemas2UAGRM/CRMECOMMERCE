@@ -44,8 +44,8 @@ function Register() {
     }
 
     try {
-      const response = await api.post("/users/register/", formData);
-      
+      const response = await api.post("/users/auth/signup/", formData);
+
       if (response.status === 201 || response.status === 200) {
         setSuccess(response.data?.message || "Usuario registrado exitosamente.");
         setTimeout(() => Link("/login"), 2000);
@@ -54,20 +54,20 @@ function Register() {
       }
     } catch (err) {
       if (err.response?.data) {
-          const data = err.response.data;
-          if (typeof data === "object") {
-            const mensajes = Object.values(data)
-              .flat()
-              .map((m) => (typeof m === "string" ? m : JSON.stringify(m)))
-              .join(" ");
-            setError(mensajes);
-          } else if (typeof data === "string") {
-            setError(data);
-          } else {
-            setError("Error al registrar usuario.");
-          }
+        const data = err.response.data;
+        if (typeof data === "object") {
+          const mensajes = Object.values(data)
+            .flat()
+            .map((m) => (typeof m === "string" ? m : JSON.stringify(m)))
+            .join(" ");
+          setError(mensajes);
+        } else if (typeof data === "string") {
+          setError(data);
         } else {
-          setError("Error al conectar con el servidor.");
+          setError("Error al registrar usuario.");
+        }
+      } else {
+        setError("Error al conectar con el servidor.");
       }
     } finally {
       setLoading(false);

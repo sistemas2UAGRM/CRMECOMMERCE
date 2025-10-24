@@ -3,6 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
 from django.db import transaction
 
 from .models import Carrito, ItemCarrito
@@ -41,6 +42,20 @@ class CarritoViewSet(viewsets.ViewSet):
         producto = serializer.validated_data['producto']
         cantidad = serializer.validated_data['cantidad']
 
+        # Verificar stock disponible antes de agregar al carrito
+        stock_disponible = producto.stock_total()
+        if cantidad > stock_disponible:
+            return Response(
+                {'error': f'Stock insuficiente para "{producto.nombre}". Disponible: {stock_disponible}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if stock_disponible <= 0:
+            return Response(
+                {'error': f'El producto "{producto.nombre}" no tiene stock disponible.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # Si el item ya existe, actualiza la cantidad. Si no, lo crea.
         item, created = ItemCarrito.objects.get_or_create(
             carrito=carrito,
@@ -73,27 +88,36 @@ class CarritoViewSet(viewsets.ViewSet):
         if not carrito.items.exists():
             return Response({'error': 'El carrito está vacío.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Crear el Pedido
+        # 1. Generar código único para el pedido
+        import uuid
+        codigo_pedido = f"PED-{uuid.uuid4().hex[:8].upper()}"
+
+        # 2. Crear el Pedido
         pedido = Pedido.objects.create(
+            codigo=codigo_pedido,
             cliente=request.user,
-            direccion_envio=request.data.get('direccion_envio', '') # El frontend debe enviar esto
+            direccion_envio=request.data.get('direccion_envio', '')
         )
 
-        # 2. Mover items del carrito a detalles de pedido y reservar stock
+        # 3. Mover items del carrito a detalles de pedido y reservar stock
         for item_carrito in carrito.items.all():
             producto = item_carrito.producto
             stock_disponible = producto.stock_total()
             
             if item_carrito.cantidad > stock_disponible:
-                raise serializers.ValidationError(f"Stock insuficiente para '{producto.nombre}' al crear el pedido.")
+                raise ValidationError(f"Stock insuficiente para '{producto.nombre}' al crear el pedido.")
 
-            DetallePedido.objects.create(
+            # Crear el detalle del pedido
+            detalle = DetallePedido.objects.create(
                 pedido=pedido,
                 producto=producto,
                 cantidad=item_carrito.cantidad,
                 precio_unitario=item_carrito.precio_capturado,
                 nombre_producto=producto.nombre
             )
+            # Calcular y guardar el subtotal del detalle
+            detalle.calcular_subtotal()
+            detalle.save()
             
             # Reservar stock (lógica simplificada, asume un solo almacén por ahora)
             # Para múltiples almacenes, se necesitaría una estrategia de selección (ej: FIFO)
@@ -102,13 +126,13 @@ class CarritoViewSet(viewsets.ViewSet):
                 articulo_almacen.reservado += item_carrito.cantidad
                 articulo_almacen.save()
 
-        # 3. Calcular totales del pedido
+        # 4. Calcular totales del pedido
         pedido.calcular_totales()
         pedido.save()
 
-        # 4. Limpiar el carrito
+        # 5. Limpiar el carrito
         carrito.items.all().delete()
 
-        # 5. Devolver el nuevo pedido
+        # 6. Devolver el nuevo pedido
         serializer = PedidoSerializer(pedido)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

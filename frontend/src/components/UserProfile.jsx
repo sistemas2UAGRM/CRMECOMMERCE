@@ -48,7 +48,7 @@ const UserProfile = ({ onBack }) => {
     const fetchProfile = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/users/profile/me/');
+            const response = await api.get('/users/users/profile/');
             const data = response.data;
             setProfileData(data);
             setEditedData(data);
@@ -77,7 +77,7 @@ const UserProfile = ({ onBack }) => {
             setError('');
             setSuccess('');
 
-            const response = await api.put('/users/profile/me/', editedData);
+            const response = await api.put('/users/users/profile/', editedData);
 
             const data = response.data;
             setProfileData(data);
@@ -131,7 +131,7 @@ const UserProfile = ({ onBack }) => {
                 return;
             }
 
-            await api.post('/users/profile/change-password/', passwordData);
+            await api.post('/users/users/profile/change-password/', passwordData);
 
             // Limpiar formulario y mostrar éxito
             setPasswordData({

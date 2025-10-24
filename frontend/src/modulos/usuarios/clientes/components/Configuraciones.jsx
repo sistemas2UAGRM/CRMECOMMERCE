@@ -1,6 +1,9 @@
+import UserProfile from '../../../../components/UserProfile';
 
 export default function Configuraciones() {
-    return(
-        <p>hola </p>
-    )
+    return (
+        <div className="w-full">
+            <UserProfile onBack={() => { }} />
+        </div>
+    );
 }

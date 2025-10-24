@@ -79,7 +79,7 @@ export default function Empleados() {
 
             console.log("Filtros aplicados:", { statusFilterParam, roleFilterParam, params });
 
-            const { data } = await api.get("/users/search/employees/", { params });
+            const { data } = await api.get("/users/users/", { params });
 
             let results = data.results || [];
             console.log("Empleados recibidos del backend:", results.length, results);
@@ -118,7 +118,7 @@ export default function Empleados() {
     // Función para obtener los roles disponibles
     const fetchRoles = async () => {
         try {
-            const { data } = await api.get("/users/search/roles/");
+            const { data } = await api.get("/users/roles/");
             setRoles(data.roles || []);
         } catch (err) {
             console.error("Error al cargar roles:", err);
@@ -202,7 +202,7 @@ export default function Empleados() {
         if (!window.confirm("¿Estás seguro de que quieres eliminar este empleado?")) return;
 
         try {
-            await api.delete(`/users/admin/${employeeId}/`);
+            await api.delete(`/api/users/users/${employeeId}/`);
             toast.success("Empleado eliminado.");
             fetchEmployees(page, query);
         } catch (err) {
@@ -253,7 +253,7 @@ export default function Empleados() {
         }
 
         const isCreating = formMode === "create";
-        const url = isCreating ? "/users/admin-register/" : `/users/admin/${currentEmployee.id}/`;
+        const url = isCreating ? "/api/users/users/" : `/api/users/users/${currentEmployee.id}/`;
         const method = isCreating ? 'post' : 'patch';
 
         // Preparar datos para enviar
@@ -406,7 +406,7 @@ export default function Empleados() {
                             <th className="px-6 py-3">#</th>
                             <th className="px-6 py-3">Empleado</th>
                             <th className="px-6 py-3">Email</th>
-                            <th className="px-6 py-3">Teléfono</th>
+                            {/* <th className="px-6 py-3">Teléfono</th> */}
                             <th className="px-6 py-3">Roles</th>
                             <th className="px-6 py-3">Estado</th>
                             <th className="px-6 py-3">Acciones</th>
@@ -630,7 +630,7 @@ export default function Empleados() {
                                 </div>
 
                                 {/* Teléfono */}
-                                <div>
+                                {/* <div>
                                     <label htmlFor="celular" className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                                     <input
                                         id="celular"
@@ -641,7 +641,7 @@ export default function Empleados() {
                                         placeholder="+591 70123456"
                                         className="w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring-[#2e7e8b] focus:border-[#2e7e8b]"
                                     />
-                                </div>
+                                </div> */}
 
                                 {/* Fecha de nacimiento */}
                                 <div>
@@ -836,7 +836,7 @@ export default function Empleados() {
                                     <p className="text-sm text-gray-900">{currentEmployee.email}</p>
                                 </div>
 
-                                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                {/* <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                                     <label className="text-sm font-medium text-gray-500 flex items-center">
                                         <Phone className="h-4 w-4 mr-2" />
                                         Teléfono
@@ -844,7 +844,7 @@ export default function Empleados() {
                                     <p className="text-sm text-gray-900">
                                         {currentEmployee.celular || "No especificado"}
                                     </p>
-                                </div>
+                                </div> */}
 
                                 <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                                     <label className="text-sm font-medium text-gray-500 flex items-center">

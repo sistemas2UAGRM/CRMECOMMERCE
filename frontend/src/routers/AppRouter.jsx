@@ -14,9 +14,7 @@ export default function AppRouter() {
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Register />} />
       <Route path="/admin" element={<DashAdmin />} />
-      <Route path="/dashboard" element={<DashCliente />} />
-
-      <Route path="/carrito" element={<Carrito />} />
+      <Route path="/*" element={<DashCliente />} />
     </Routes>
   );
 }

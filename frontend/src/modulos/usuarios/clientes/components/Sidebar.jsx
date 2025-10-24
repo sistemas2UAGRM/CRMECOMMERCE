@@ -5,13 +5,13 @@ import { User, ShoppingCart, Package, Settings, LogOut, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
-  { icon: User, text: 'Mi Perfil', path: '/profile' },
+  { icon: Package, text: 'Productos', path: '/productos' },
   { icon: Package, text: 'Mis Pedidos', path: '/orders' },
   { icon: ShoppingCart, text: 'Mi Carrito', path: '/cart' },
   { icon: Settings, text: 'Configuración', path: '/settings' },
 ];
 
-export default function Sidebar({ isOpen = false, onClose = () => {} }) {
+export default function Sidebar({ isOpen = false, onClose = () => { } }) {
   const location = useLocation();
   const panelRef = useRef(null);
 
@@ -75,8 +75,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
               <NavLink
                 to={l.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition ${
-                    isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
                   }`
                 }
                 aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
@@ -151,8 +150,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                       <NavLink
                         to={l.path}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2 rounded-md transition ${
-                            isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                          `flex items-center gap-3 px-3 py-2 rounded-md transition ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
                           }`
                         }
                         aria-current={({ isActive }) => (isActive ? 'page' : undefined)}

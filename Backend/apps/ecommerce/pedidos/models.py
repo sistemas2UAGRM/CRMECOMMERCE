@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from decimal import Decimal
 
 # Ajusta este import si tu modelo de producto está en otra app
 from ..productos.models import Producto
@@ -64,7 +65,7 @@ class Pedido(models.Model):
         """
         detalles = self.detalles.all()
         subtotal = sum([d.subtotal for d in detalles])
-        impuestos = subtotal * impuesto_rate
+        impuestos = subtotal * Decimal(impuesto_rate)  # Convertir impuesto_rate a Decimal
         total = subtotal + impuestos
         self.subtotal = subtotal
         self.impuestos = round(impuestos, 2)
@@ -89,6 +90,8 @@ class DetallePedido(models.Model):
         return f"{self.producto} x {self.cantidad}"
 
     def calcular_subtotal(self):
-        subtotal = (self.precio_unitario * self.cantidad) - self.descuento
+        # Convertir descuento a Decimal para evitar errores de tipo
+        descuento_decimal = Decimal(str(self.descuento)) if self.descuento else Decimal('0.00')
+        subtotal = (self.precio_unitario * self.cantidad) - descuento_decimal
         self.subtotal = round(subtotal, 2)
         return self.subtotal

@@ -21,6 +21,8 @@ export default function Login() {
       const refresh = res.data.refresh ?? res.data.refresh_token;
       const user = res.data.user ?? null;
 
+      console.log({ user })
+
       if (!access) {
         setError("Respuesta de autenticación inválida (no vino token).");
         return;
@@ -36,6 +38,9 @@ export default function Login() {
       setError("");
       // Redirigir según rol devuelto por backend (groups es array de nombres)
       const groups = user?.groups ?? [];
+
+      console.log(groups)
+
       if (groups.includes("administrador")) {
         navigate("/admin");
       } else {

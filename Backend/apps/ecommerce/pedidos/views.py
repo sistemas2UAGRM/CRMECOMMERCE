@@ -1,9 +1,14 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Pedido, DetallePedido
 from .serializers import PedidoSerializer, DetallePedidoSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+import stripe
+from django.conf import settings
+
+# Configurar Stripe
+stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
 
 class EsPropietarioOPermisoAdmin(permissions.BasePermission):
     """
@@ -54,33 +59,50 @@ class PedidoViewSet(viewsets.ModelViewSet):
         if pedido.pagado:
             return Response({'error': 'Este pedido ya ha sido pagado.'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Verificar que Stripe esté configurado
+        if not stripe.api_key or stripe.api_key == '':
+            return Response({
+                'error': 'Stripe no está configurado correctamente. Por favor, agrega tu STRIPE_SECRET_KEY en el archivo .env'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
         try:
             # Stripe maneja montos en la unidad monetaria más pequeña (ej. centavos)
             monto_en_centavos = int(pedido.total * 100)
             
+            # Crear PaymentIntent de Stripe
             intent = stripe.PaymentIntent.create(
                 amount=monto_en_centavos,
-                currency='usd', # O la moneda que corresponda
+                currency='usd',
                 metadata={
                     'pedido_id': pedido.id,
-                    'cliente_username': pedido.cliente.username
-                }
+                    'pedido_codigo': pedido.codigo,
+                    'cliente_username': pedido.cliente.username if pedido.cliente else 'Anónimo',
+                    'cliente_email': pedido.cliente.email if pedido.cliente else '',
+                },
+                description=f'Pedido {pedido.codigo}',
             )
             
-            # Crear un registro de pago preliminar
-            Pago.objects.create(
-                pedido=pedido,
-                id_transaccion_proveedor=intent.id,
-                monto=pedido.total,
-                moneda='USD'
-            )
+            # Opcional: Crear un registro de pago preliminar si tienes el modelo Pago
+            # from ..pagos.models import Pago
+            # Pago.objects.create(
+            #     pedido=pedido,
+            #     id_transaccion_proveedor=intent.id,
+            #     monto=pedido.total,
+            #     moneda='USD'
+            # )
             
             return Response({
-                'clientSecret': intent.client_secret
+                'clientSecret': intent.client_secret,
+                'pedido_id': pedido.id,
+                'pedido_codigo': pedido.codigo,
+                'total': float(pedido.total),
             })
             
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Capturar cualquier error (incluidos los de Stripe)
+            error_message = str(e)
+            print(f"Error en iniciar_pago: {error_message}")  # Para debugging
+            return Response({'error': f'Error al procesar el pago: {error_message}'}, status=status.HTTP_400_BAD_REQUEST)
 
 class DetallePedidoViewSet(viewsets.ModelViewSet):
     queryset = DetallePedido.objects.all().select_related('producto', 'pedido')

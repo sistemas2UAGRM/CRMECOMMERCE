@@ -61,10 +61,11 @@ class UserSignupView(CreateAPIView):
                 usuario=user
             )
 
-        try:
-            send_verification_email_task.delay(user.id)
-        except Exception:
-            send_verification_email_task(user.id)
+        # Desactivado temporalmente el envío de correos de verificación
+        # try:
+        #     send_verification_email_task.delay(user.id)
+        # except Exception:
+        #     send_verification_email_task(user.id)
 
     def get_client_ip(self):
         x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
@@ -287,6 +288,58 @@ class UserViewSet(viewsets.ModelViewSet):
                 )
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], url_path='change-password')
+    def change_password(self, request):
+        """
+        Cambia la contraseña del usuario autenticado.
+        Requiere: current_password, new_password, new_password_confirm
+        """
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        new_password_confirm = request.data.get('new_password_confirm')
+
+        # Validaciones
+        if not all([current_password, new_password, new_password_confirm]):
+            return Response(
+                {'error': 'Todos los campos son requeridos'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {'current_password': ['La contraseña actual es incorrecta']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != new_password_confirm:
+            return Response(
+                {'new_password_confirm': ['Las contraseñas nuevas no coinciden']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(new_password) < 8:
+            return Response(
+                {'new_password': ['La contraseña debe tener al menos 8 caracteres']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Cambiar contraseña
+        user.set_password(new_password)
+        user.save()
+
+        if Bitacora:
+            Bitacora.objects.create(
+                accion=f"Contraseña cambiada: {user.email}",
+                ip=self._get_client_ip(request),
+                usuario=user
+            )
+
+        return Response(
+            {'detail': 'Contraseña cambiada exitosamente'},
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=['get'])
     def search(self, request):

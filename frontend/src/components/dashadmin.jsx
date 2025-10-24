@@ -29,8 +29,9 @@ const sidebarItems = [
   { name: "Usuarios", icon: <Users size={22} />, component: <GestionUsuarios /> },
   { name: "Empleados", icon: <UserCheck size={22} />, component: <Empleados /> },
   { name: "Bitácora", icon: <FileText size={22} />, component: <Bitacora /> },
-  { name: "Perfiles", icon: <Shield size={22} />, component: <div>Contenido de Perfiles</div> },
-  { name: "Productos", icon: <Package size={22} />, component: <Productos />,
+  // { name: "Perfiles", icon: <Shield size={22} />, component: <div>Contenido de Perfiles</div> },
+  {
+    name: "Productos", icon: <Package size={22} />, component: <Productos />,
     subMenu: [
       { name: "Listado", component: <Productos /> },
       { name: "Categorías", component: < ProductosCategorias /> },
@@ -39,11 +40,11 @@ const sidebarItems = [
     ],
   },
   { name: "Carritos Activos", icon: <ShoppingCart size={22} />, component: <GestionCarritos /> },
-  { name: "Pedidos", icon: <ClipboardList size={22} />, component: <div>Contenido de Pedidos</div> },
-  { name: "Pagos", icon: <CreditCard size={22} />, component: <div>Contenido de Pagos</div> },
-  { name: "CRM", icon: <Handshake size={22} />, component: <div>Contenido de CRM</div> },
-  { name: "Reportes", icon: <BarChart2 size={22} />, component: <div>Contenido de Reportes</div> },
-  { name: "IA", icon: <Bot size={22} />, component: <div>Contenido de IA</div> },
+  // { name: "Pedidos", icon: <ClipboardList size={22} />, component: <div>Contenido de Pedidos</div> },
+  // { name: "Pagos", icon: <CreditCard size={22} />, component: <div>Contenido de Pagos</div> },
+  // { name: "CRM", icon: <Handshake size={22} />, component: <div>Contenido de CRM</div> },
+  // { name: "Reportes", icon: <BarChart2 size={22} />, component: <div>Contenido de Reportes</div> },
+  // { name: "IA", icon: <Bot size={22} />, component: <div>Contenido de IA</div> },
 ];
 
 /* ------------------ Loader simple (para Suspense) ------------------ */
@@ -146,11 +147,10 @@ export default function DashAdmin() {
                     title={item.name}
                     onClick={() => setActiveItem(item)}
                     aria-current={isActive ? "page" : undefined}
-                    className={`w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 transform ${
-                      isActive
+                    className={`w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 transform ${isActive
                         ? "bg-[#f0a831] text-white shadow-lg"
                         : "text-gray-200 hover:bg-white/10 hover:text-white"
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center justify-center">{item.icon}</span>
                     <span className="hidden md:inline-block">{item.name}</span>
@@ -236,7 +236,7 @@ export default function DashAdmin() {
         {/* Footer (opcional) */}
         <footer className="bg-white border-t px-6 py-3 text-sm text-slate-600">
           <div className="container mx-auto max-w-6xl">
-            Sistema administrativo • {new Date().getFullYear()} • Hecho con Amor ❤️  
+            Sistema administrativo • {new Date().getFullYear()} • Hecho con Amor ❤️
           </div>
         </footer>
       </div>
