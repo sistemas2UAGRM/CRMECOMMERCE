@@ -10,7 +10,9 @@ import Configuraciones from './components/Configuraciones';
 import Profile from './components/Profile';
 import logocrm from '../../../assets/logoCRM.png';
 import carritoService from '../../../services/carritosService';
-import { clearAuthTokens } from '../../../utils/auth';
+import { clearAuthTokens, getRefreshToken } from '../../../utils/auth';
+import api from '../../../services/api';
+import toast from 'react-hot-toast';
 
 const sidebarItems = [
   { name: 'Productos', icon: <Package size={22} />, path: '/cliente/productos' },
@@ -48,10 +50,25 @@ export default function DashCliente() {
     }
   }, [isCartOpen]);
 
-  const handleLogout = () => {
-    clearAuthTokens();
-    navigate('/login', { replace: true });
-  };
+  const handleLogout = async () => {
+        if (!window.confirm("¿Estás seguro de que quieres cerrar sesión?")) return;
+        const refresh = getRefreshToken();
+
+        try {
+            // Si tienes refresh, intenta avisar al backend para blacklistearlo
+            if (refresh) {
+                await api.post("/users/auth/logout/", { refresh });
+            } else {
+                console.warn("No se encontró refresh token en localStorage. Solo se limpiarán tokens locales.");
+            }
+        } catch (err) {
+            console.warn("Error al llamar logout en backend:", err?.response?.data ?? err.message ?? err);
+        } finally {
+            clearAuthTokens();
+            toast.success("Sesión cerrada correctamente.");
+            navigate("/login");
+        }
+    };  
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans text-gray-800">

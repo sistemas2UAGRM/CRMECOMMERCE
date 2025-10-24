@@ -195,7 +195,6 @@ export default function DashAdmin() {
             className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#2e7e8b] focus:ring-white text-gray-200 hover:bg-red-600 hover:text-white"
           >
             <LogOut size={22} />
-            {/* MEJORA: Eliminado 'hidden md:inline-block' para que el texto se vea en móvil */}
             <span>Cerrar Sesión</span>
           </button>
         </div>

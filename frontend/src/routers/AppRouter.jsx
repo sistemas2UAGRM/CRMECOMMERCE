@@ -13,8 +13,15 @@ export default function AppRouter() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Register />} />
-      <Route path="/admin" element={<DashAdmin />} />
-      <Route path="/*" element={<DashCliente />} />
+
+      <Route element={<RequireAuth requiredRole="cliente" />}>
+        <Route path="/*" element={<DashCliente />} />
+      </Route>
+
+      <Route element={<RequireAuth requiredRole="administrador" />}>
+        <Route path="/admin" element={<DashAdmin />} />
+      </Route>
+     
     </Routes>
   );
 }
