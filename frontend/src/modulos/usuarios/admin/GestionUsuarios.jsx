@@ -12,7 +12,7 @@ import {
   Users, Search, Plus, RefreshCw, Eye, Edit2, Trash2, UserCheck,
   UserX, X, Save, ChevronLeft, ChevronRight, Mail, Phone,
   Calendar, Shield, Activity, AlertCircle, Filter, FilterX,
-  SlidersHorizontal, ChevronDown, ChevronUp
+  SlidersHorizontal, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 
@@ -24,7 +24,7 @@ export default function GestionUsuarios() {
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
-  const [modo, setModo] = useState('crear'); // 'crear' o 'editar'
+  const [modo, setModo] = useState('crear'); 
   
   const [filtros, setFiltros] = useState({ page: 1, search: "" });
 
@@ -63,7 +63,6 @@ export default function GestionUsuarios() {
       }
       handleCerrarModal();
     } catch (err) {
-      // El toast de error ya se muestra desde el contexto
       console.error("Fallo el submit:", err);
     }
   };
