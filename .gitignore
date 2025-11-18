@@ -9,6 +9,10 @@
 .env.production
 .env.test
 
+# Ignorar carpetas y archivos de Python
+__pycache__/
+*.pyc
+
 # Archivos de configuración de sistema
 .DS_Store
 .DS_Store?
