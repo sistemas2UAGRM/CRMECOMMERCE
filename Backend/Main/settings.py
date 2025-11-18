@@ -35,6 +35,10 @@ INSTALLED_APPS = [
     'apps.ecommerce.pedidos',
     'apps.ecommerce.carritos',
     'apps.ecommerce.pagos',
+    'apps.crm.crm_preventa',
+    'apps.crm.calendario',
+    'apps.crm.clientes',
+    'apps.crm.soporte',
 ]
 
 AUTH_USER_MODEL = 'users.User'

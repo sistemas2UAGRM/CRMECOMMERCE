@@ -1,3 +1,4 @@
+# backend/main/urls.py
 from django.contrib import admin
 from django.urls import path, include
 
@@ -21,4 +22,5 @@ urlpatterns = [
 
     path('api/users/', include('apps.users.urls')),
     path('api/ecommerce/', include('apps.ecommerce.urls')),
+    path('api/crm/', include('apps.crm.urls')),
 ]
