@@ -1,4 +1,4 @@
-// Vista del Carrito de Compras
+// frontend/src/modulos/usuarios/clientes/components/Carrito.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import carritoService from '../../../../services/carritosService';

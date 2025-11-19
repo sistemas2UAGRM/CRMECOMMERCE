@@ -1,4 +1,4 @@
-// src/modulos/usuarios/context/UsersContext.jsx
+// frontend/src/modulos/usuarios/context/UsersContext.jsx
 import React, { createContext, useState, useCallback } from "react";
 import usersService from "../../../services/usersService";
 import toast from "react-hot-toast";

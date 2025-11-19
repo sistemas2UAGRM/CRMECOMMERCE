@@ -2,6 +2,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
+from django.db import connection
 from .models import Cliente
 
 from apps.ecommerce.pedidos.models import Pedido
@@ -14,6 +15,8 @@ def crear_perfil_cliente(sender, instance, created, **kwargs):
     crea un nuevo CustomUser.
     """
     if created:
+        if connection.schema_name == 'public':
+            return
         Cliente.objects.create(usuario=instance)
 
 @receiver(post_save, sender=Pedido)

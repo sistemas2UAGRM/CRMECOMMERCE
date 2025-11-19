@@ -1,8 +1,8 @@
+// frontend/src/components/UserProfile.jsx
 import { useState, useEffect } from 'react';
 import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 import { clearAuthTokens } from '../utils/auth';
-
 
 const UserProfile = ({ onBack }) => {
     // Estados principales

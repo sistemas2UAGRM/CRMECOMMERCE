@@ -1,4 +1,4 @@
-// src/services/carritosService.js (NUEVO)
+// frontend/src/services/carritosService.js
 import api from './api';
 
 const ENDPOINT_BASE = '/ecommerce/carrito';

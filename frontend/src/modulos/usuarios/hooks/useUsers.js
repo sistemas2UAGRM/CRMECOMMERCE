@@ -1,4 +1,4 @@
-// src/modulos/usuarios/hooks/useUsers.js
+// frontend/src/modulos/usuarios/hooks/useUsers.js
 import { useContext } from "react";
 import { UsersContext } from "../context/UsersContext";
 

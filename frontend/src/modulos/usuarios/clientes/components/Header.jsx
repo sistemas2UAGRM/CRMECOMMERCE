@@ -1,4 +1,4 @@
-//src/modulos/usuarios/clientes/components/Header.jsx
+//frontend/src/modulos/usuarios/clientes/components/Header.jsx
 import React from 'react';
 import { Menu, Search, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';

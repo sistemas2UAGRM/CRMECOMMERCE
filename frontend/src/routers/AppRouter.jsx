@@ -1,3 +1,4 @@
+// frontend/src/routers/AppRouter.jsx
 import { Routes, Route } from "react-router-dom";
 import Login from "../components/login";
 import Register from "../components/registraruser";

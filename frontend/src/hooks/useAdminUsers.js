@@ -1,4 +1,4 @@
-// src/hooks/useAdminUsers.js
+// frontend/src/hooks/useAdminUsers.js
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   adminListUsers,

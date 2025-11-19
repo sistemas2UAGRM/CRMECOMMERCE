@@ -1,4 +1,4 @@
-// src/modulos/usuarios/admin/UserForm.jsx
+// frontend/src/modulos/usuarios/admin/UserForm.jsx
 import React, { useState, useEffect } from 'react';
 
 export default function UserForm({ usuarioInicial, onSubmit, onCancelar, cargando }) {

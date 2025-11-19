@@ -1,4 +1,4 @@
-// src/pages/DashAdmin.jsx
+// frontend/src/components/dashadmin.jsx
 import React, { useState, useEffect, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {

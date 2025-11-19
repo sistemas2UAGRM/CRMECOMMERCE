@@ -1,4 +1,4 @@
-// src/modulos/productos/GestionProductos.jsx
+// frontend/src/modulos/productos/GestionProductos.jsx
 import React, { useState, useEffect } from "react";
 import { useProductos } from "./hooks/useProductos";
 import toast from "react-hot-toast";

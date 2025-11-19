@@ -1,16 +1,23 @@
+# backend/main/settings.py
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
+import dj_database_url
 
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
-ALLOWED_HOSTS = []
 
-INSTALLED_APPS = [
+ALLOWED_HOSTS = ['.localhost', '127.0.0.1', 'localhost']
+
+# Apps que viven en el esquema 'public' (Comunes a todos)
+SHARED_APPS = (
+    'django_tenants', 
+    'apps.tenants',    
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -29,22 +36,48 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'django_celery_results',
 
-    'apps.core',
+    'apps.users', 
+    'apps.core',  
+)
+
+# Apps que viven en cada esquema de inquilino (Datos Privados)
+TENANT_APPS = (
+    # Django requiere estas apps también en los esquemas de inquilinos
+    'django.contrib.contenttypes',
+    'django.contrib.auth',
+    'django.contrib.messages',
+    'django.contrib.admin', # Opcional, si quieres que cada tenant tenga su /admin
+
+    # --- TUS APPS DE NEGOCIO (Aquí están los datos aislados) ---
     'apps.users',
+    
+    # E-commerce
     'apps.ecommerce.productos',
     'apps.ecommerce.pedidos',
     'apps.ecommerce.carritos',
     'apps.ecommerce.pagos',
+
+    # CRM
     'apps.crm.crm_preventa',
     'apps.crm.calendario',
     'apps.crm.clientes',
     'apps.crm.soporte',
-]
+)
+
+# Django Tenants combina ambas listas para que Django arranque
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
+# Configuración del modelo de Inquilino
+TENANT_MODEL = "tenants.Client" 
+TENANT_DOMAIN_MODEL = "tenants.Domain"
 
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    # --- CAMBIO 2: MIDDLEWARE DE TENANTS ---
+    'django_tenants.middleware.main.TenantMainMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -76,22 +109,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'main.wsgi.application'
 
+# --- VARIABLES DE ENTORNO ---
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
+MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY')
+MAILGUN_DOMAIN = os.getenv('MAILGUN_DOMAIN')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@tudominio.com')
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        'OPTIONS': {
-            'sslmode': os.getenv('DB_SSL', 'prefer'),
-        }
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
+
+DATABASES['default']['ENGINE'] = 'django_tenants.postgresql_backend'
+
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
@@ -113,7 +149,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
-
 MEDIA_URL = '/media/'  
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -160,8 +195,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",  # Vue
     "http://localhost:4200",  # Angular
     "http://localhost:4000",
+
+    # En producción aquí irían tus dominios reales
+    # "https://pepita.mitienda.com",
 ]
 
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 
 SWAGGER_SETTINGS = {
@@ -179,19 +218,12 @@ SWAGGER_SETTINGS = {
 REDOC_SETTINGS = {'LAZY_RENDERING': False}
 
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = 'django-db' # O usa 'redis://localhost:6379/1'
+CELERY_RESULT_BACKEND = 'django-db' 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
-# --- CORRECCIÓN: Añadir variables para tasks.py ---
-SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
-MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY')
-MAILGUN_DOMAIN = os.getenv('MAILGUN_DOMAIN')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@tudominio.com')
-
-# Seguridad extra (activar en producción cuando DEBUG = False)
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

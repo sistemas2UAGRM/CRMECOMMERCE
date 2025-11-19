@@ -1,4 +1,4 @@
-// src/components/login.jsx
+// frontend/src/components/login.jsx
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import api from "../services/api";
@@ -41,7 +41,7 @@ export default function Login() {
 
       console.log(groups)
 
-      if (groups.includes("administrador")) {
+      if (groups.includes("admin")) {
         navigate("/admin");
       } else {
         navigate("/dashboard");

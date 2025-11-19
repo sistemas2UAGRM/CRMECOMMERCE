@@ -1,4 +1,4 @@
-// src/modulos/usuarios/admin/GestionUsuarios.jsx
+// frontend/src/modulos/usuarios/admin/GestionUsuarios.jsx
 import React, { useEffect, useState } from "react";
 import { useUsers } from "../hooks/useUsers";
 import usersService from "../../../services/usersService";

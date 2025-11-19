@@ -1,3 +1,4 @@
+// frontend/src/services/productosService.js
 import api from "./api";
 
 const ENDPOINT = "/ecommerce/productos/";

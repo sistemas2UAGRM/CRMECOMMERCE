@@ -1,4 +1,4 @@
-// src/modulos/empleados/Empleados.jsx
+// frontend/src/modulos/empleados/Empleados.jsx
 import React, { useEffect, useState } from "react";
 import {
     PlusCircle, Edit, Trash2, Search as SearchIcon,
