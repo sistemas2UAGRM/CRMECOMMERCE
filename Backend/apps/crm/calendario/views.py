@@ -1,4 +1,5 @@
 # apps/crm/calendario/views.py
+from django.db import models
 from rest_framework import viewsets, permissions
 from .models import EventoCalendario
 from .serializers import EventoCalendarioSerializer
