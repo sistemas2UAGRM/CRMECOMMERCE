@@ -170,7 +170,7 @@ class LoginView(APIView):
             if Bitacora:
                 Bitacora.objects.create(
                     accion="Login exitoso",
-                    ip=self.get_client_ip(request),
+                    ip=self.get_client_ip(),
                     usuario=user
                 )
 
@@ -195,11 +195,11 @@ class LoginView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_client_ip(self, request):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    def get_client_ip(self):
+        x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0]
-        return request.META.get('REMOTE_ADDR')
+        return self.request.META.get('REMOTE_ADDR')
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

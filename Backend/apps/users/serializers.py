@@ -395,11 +395,12 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Credenciales inválidas.', code='authorization')
         if not user.is_active:
             raise serializers.ValidationError('Cuenta desactivada.', code='authorization')
-        if not user.is_verified:
-            raise serializers.ValidationError(
-                'Esta cuenta no ha sido verificada. Revisa tu email.', 
-                code='authorization'
-            )
+        # Comentado temporalmente para desarrollo - descomentar en producción
+        # if not user.is_verified:
+        #     raise serializers.ValidationError(
+        #         'Esta cuenta no ha sido verificada. Revisa tu email.', 
+        #         code='authorization'
+        #     )
         
         data['user'] = user
         return data
