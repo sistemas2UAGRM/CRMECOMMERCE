@@ -191,7 +191,7 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-CORS_ALLOWED_ORIGINS = [
+"""CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite
     "http://localhost:3000",  # React
     "http://localhost:8080",  # Vue
@@ -200,6 +200,20 @@ CORS_ALLOWED_ORIGINS = [
 
     # En producción aquí irían tus dominios reales
     # "https://pepita.mitienda.com",
+]"""
+
+# Comenta o elimina CORS_ALLOWED_ORIGINS estático y usa esto:
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://.+\.localhost:5173$",   # Permite cualquier subdominio en puerto 5173
+    r"^http://localhost:5173$",       # Permite localhost directo
+    r"^http://.+\.localhost:3000$",   # Permite cualquier subdominio en puerto 3000
+    r"^http://localhost:3000$",       # Permite localhost directo
+    r"^http://.+\.localhost:8080$",   # Permite cualquier subdominio en puerto 8080
+    r"^http://localhost:8080$",       # Permite localhost directo
+    r"^http://.+\.localhost:4200$",   # Permite cualquier subdominio en puerto 4200
+    r"^http://localhost:4200$",       # Permite localhost directo
+    r"^http://.+\.localhost:4000$",   # Permite cualquier subdominio en puerto 4000
+    r"^http://localhost:4000$",       # Permite localhost directo
 ]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG

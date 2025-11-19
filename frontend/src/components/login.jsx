@@ -37,14 +37,17 @@ export default function Login() {
 
       setError("");
       // Redirigir según rol devuelto por backend (groups es array de nombres)
-      const groups = user?.groups ?? [];
+      const groups = user?.groups || [];
 
-      console.log(groups)
+      console.log("Login exitoso. Grupos detectados:", groups);
 
-      if (groups.includes("admin")) {
-        navigate("/admin");
+      if (groups.includes("administrador") || user.is_superuser) {
+            console.log("Redirigiendo a panel ADMIN...");
+            navigate("/admin"); 
       } else {
-        navigate("/dashboard");
+          console.log("Redirigiendo a tienda CLIENTE...");
+          // En el router nuevo, '/cliente/productos' es la home del cliente
+          navigate("/cliente/productos"); 
       }
     } catch (err) {
       console.error("Error login:", err);
