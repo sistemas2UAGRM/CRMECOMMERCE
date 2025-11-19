@@ -118,6 +118,11 @@ MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY')
 MAILGUN_DOMAIN = os.getenv('MAILGUN_DOMAIN')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@tudominio.com')
 
+# --- MICROSERVICIOS (API GATEWAY) ---
+PREDICTION_SERVICE_URL = os.getenv('PREDICTION_SERVICE_URL', 'http://localhost:8002')
+REPORTS_SERVICE_URL = os.getenv('REPORTS_SERVICE_URL', 'http://localhost:8001')
+
+
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL')

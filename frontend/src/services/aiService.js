@@ -1,31 +1,34 @@
 import api from './api';
+import { getAuthToken } from '../utils/auth';
 
 const aiService = {
   // Función para predicciones de ventas
+  // El backend Django (API Gateway) redirige a http://localhost:8002
   predictSales: async (dias) => {
     try {
-      const response = await api.post('/predictions/predecir/', { 
-        dias_a_predecir: dias  // Cambio de 'dias' a 'dias_a_predecir' para coincidir con el schema del microservicio
+      const response = await api.post('/ai/predictions/predecir/', {
+        dias_a_predecir: dias
       });
       return response.data;
     } catch (error) {
+      console.error('Error en predictSales:', error);
       throw error;
     }
   },
 
   // Función para generar reportes con IA
+  // El backend Django (API Gateway) redirige a http://localhost:8001
   generateReport: async (prompt, formato = 'json') => {
     try {
-      // El microservicio determina el formato desde el prompt usando IA
-      // pero mantenemos el parámetro para futuras extensiones
-      const response = await api.post('/reports/generar-reporte-ia/', { 
+      const response = await api.post('/ai/reports/generar-reporte-ia/', {
         prompt,
-        formato 
+        formato
       }, {
-        responseType: formato !== 'json' ? 'blob' : 'json'  // Configurar para recibir archivos binarios
+        responseType: formato !== 'json' ? 'blob' : 'json'
       });
       return response;
     } catch (error) {
+      console.error('Error en generateReport:', error);
       throw error;
     }
   },

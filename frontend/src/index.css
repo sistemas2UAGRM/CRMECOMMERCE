@@ -1,4 +1,25 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+@theme {
+    --color-primary: var(--primary-color);
+    --color-primary-50: color-mix(in srgb, var(--primary-color), white 90%);
+    --color-primary-100: color-mix(in srgb, var(--primary-color), white 80%);
+    --color-primary-200: color-mix(in srgb, var(--primary-color), white 60%);
+    --color-primary-300: color-mix(in srgb, var(--primary-color), white 40%);
+    --color-primary-400: color-mix(in srgb, var(--primary-color), white 20%);
+    --color-primary-500: var(--primary-color);
+    --color-primary-600: color-mix(in srgb, var(--primary-color), black 10%);
+    --color-primary-700: color-mix(in srgb, var(--primary-color), black 20%);
+    --color-primary-800: color-mix(in srgb, var(--primary-color), black 30%);
+    --color-primary-900: color-mix(in srgb, var(--primary-color), black 40%);
+}
+
+:root {
+    --primary-color: #3B82F6;
+    /* Default blue */
+    --base-font-size: 16px;
+}
+
+body {
+    font-size: var(--base-font-size);
+}

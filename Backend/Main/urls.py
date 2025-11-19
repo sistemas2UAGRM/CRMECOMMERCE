@@ -24,6 +24,11 @@ urlpatterns = [
     path('api/users/', include('apps.users.urls')),
     path('api/ecommerce/', include('apps.ecommerce.urls')),
     path('api/crm/', include('apps.crm.urls')),
+    
+    # AI Microservices (API Gateway)
+    path('api/ai/predictions/', include('apps.predictions.urls')),
+    path('api/ai/reports/', include('apps.reports.urls')),
+    
     path('api/tenant-info/', TenantInfoView.as_view(), name='tenant-info'),
     path('api/tenants/register/', RegisterTenantView.as_view(), name='tenant-register'),
 ]

@@ -40,6 +40,11 @@ def generar_reporte(request: ReportRequest):
         print(f"Error en servicio LLM: {e}")
         raise HTTPException(status_code=500, detail=f"Error al contactar la IA: {e}")
     
+    # Agregar tenant_schema a los parámetros
+    if request.tenant_schema:
+        parametros['tenant_schema'] = request.tenant_schema
+        print(f"DEBUG: Usando tenant schema: {request.tenant_schema}")
+    
     formato = parametros.get('format', 'json').lower()
     
     try:

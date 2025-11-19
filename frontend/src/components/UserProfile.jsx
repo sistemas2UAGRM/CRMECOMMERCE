@@ -1,10 +1,12 @@
-// frontend/src/components/UserProfile.jsx
 import { useState, useEffect } from 'react';
 import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 import { clearAuthTokens } from '../utils/auth';
+import { useTheme } from '../context/ThemeContext';
 
 const UserProfile = ({ onBack }) => {
+    const { theme, updateTheme } = useTheme();
+
     // Estados principales
     const [profileData, setProfileData] = useState({
         id: '',
@@ -208,7 +210,7 @@ const UserProfile = ({ onBack }) => {
         return (
             <div className="p-6 bg-gray-50 min-h-screen">
                 <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-8 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">Cargando perfil de usuario...</p>
                 </div>
             </div>
@@ -254,22 +256,22 @@ const UserProfile = ({ onBack }) => {
             {/* Formulario de perfil */}
             <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm overflow-hidden">
                 {/* Avatar y información básica */}
-                <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-white text-center">
+                <div className="bg-gradient-to-r from-primary-600 to-primary-800 px-6 py-8 text-white text-center">
                     <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <User className="w-12 h-12" />
                     </div>
                     <h2 className="text-xl font-semibold mb-1">
                         {profileData.first_name} {profileData.last_name}
                     </h2>
-                    <p className="text-blue-100">@{profileData.username}</p>
+                    <p className="text-primary-100">@{profileData.username}</p>
                     <div className="mt-4 flex justify-center gap-4 text-sm">
                         <div className="text-center">
                             <div className="font-medium">Miembro desde</div>
-                            <div className="text-blue-100">{formatDate(profileData.date_joined).split(',')[0]}</div>
+                            <div className="text-primary-100">{formatDate(profileData.date_joined).split(',')[0]}</div>
                         </div>
                         <div className="text-center">
                             <div className="font-medium">Último login</div>
-                            <div className="text-blue-100">{formatDate(profileData.last_login)}</div>
+                            <div className="text-primary-100">{formatDate(profileData.last_login)}</div>
                         </div>
                     </div>
                 </div>
@@ -293,7 +295,7 @@ const UserProfile = ({ onBack }) => {
                                     <button
                                         onClick={handleSaveProfile}
                                         disabled={saving}
-                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
                                     >
                                         {saving ? (
                                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -306,7 +308,7 @@ const UserProfile = ({ onBack }) => {
                             ) : (
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                                 >
                                     Editar Perfil
                                 </button>
@@ -327,7 +329,7 @@ const UserProfile = ({ onBack }) => {
                                     value={isEditing ? editedData.username : profileData.username}
                                     onChange={(e) => handleInputChange('username', e.target.value)}
                                     disabled={!isEditing}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                                 />
                             </div>
                         </div>
@@ -344,7 +346,7 @@ const UserProfile = ({ onBack }) => {
                                     value={isEditing ? editedData.email : profileData.email}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
                                     disabled={!isEditing}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                                 />
                             </div>
                         </div>
@@ -360,7 +362,7 @@ const UserProfile = ({ onBack }) => {
                                     value={isEditing ? editedData.first_name : profileData.first_name}
                                     onChange={(e) => handleInputChange('first_name', e.target.value)}
                                     disabled={!isEditing}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                                 />
                             </div>
                             <div>
@@ -372,7 +374,7 @@ const UserProfile = ({ onBack }) => {
                                     value={isEditing ? editedData.last_name : profileData.last_name}
                                     onChange={(e) => handleInputChange('last_name', e.target.value)}
                                     disabled={!isEditing}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                                 />
                             </div>
                         </div>
@@ -384,7 +386,7 @@ const UserProfile = ({ onBack }) => {
                             <h3 className="text-lg font-semibold text-gray-800">Seguridad</h3>
                             <button
                                 onClick={() => setShowPasswordForm(!showPasswordForm)}
-                                className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
                             >
                                 <Lock className="w-4 h-4" />
                                 Cambiar Contraseña
@@ -412,7 +414,7 @@ const UserProfile = ({ onBack }) => {
                                             type={showPasswords.current ? 'text' : 'password'}
                                             value={passwordData.current_password}
                                             onChange={(e) => handlePasswordChange('current_password', e.target.value)}
-                                            className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                             placeholder="Ingrese su contraseña actual"
                                         />
                                         <button
@@ -436,7 +438,7 @@ const UserProfile = ({ onBack }) => {
                                             type={showPasswords.new ? 'text' : 'password'}
                                             value={passwordData.new_password}
                                             onChange={(e) => handlePasswordChange('new_password', e.target.value)}
-                                            className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                             placeholder="Ingrese la nueva contraseña"
                                         />
                                         <button
@@ -463,7 +465,7 @@ const UserProfile = ({ onBack }) => {
                                             type={showPasswords.confirm ? 'text' : 'password'}
                                             value={passwordData.new_password_confirm}
                                             onChange={(e) => handlePasswordChange('new_password_confirm', e.target.value)}
-                                            className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                             placeholder="Confirme la nueva contraseña"
                                         />
                                         <button
@@ -493,23 +495,75 @@ const UserProfile = ({ onBack }) => {
                                         }}
                                         className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                                     >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleChangePassword}
-                                        disabled={saving}
-                                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                                    >
-                                        {saving ? (
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                        ) : (
-                                            <Save className="w-4 h-4" />
-                                        )}
                                         {saving ? 'Cambiando...' : 'Cambiar Contraseña'}
                                     </button>
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* Sección de Personalización de UI */}
+                <div className="mt-8 pt-6 border-t border-gray-200 p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Personalización de Interfaz</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Selector de Color */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Color del Tema
+                            </label>
+                            <div className="flex gap-3">
+                                {[
+                                    { name: 'Azul', value: '#3B82F6' },
+                                    { name: 'Verde', value: '#10B981' },
+                                    { name: 'Púrpura', value: '#8B5CF6' },
+                                    { name: 'Rojo', value: '#EF4444' },
+                                    { name: 'Naranja', value: '#F59E0B' },
+                                    { name: 'Negro', value: '#1F2937' },
+                                ].map((color) => (
+                                    <button
+                                        key={color.value}
+                                        onClick={() => updateTheme({ color: color.value })}
+                                        className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${theme.color === color.value ? 'border-gray-900 scale-110' : 'border-transparent'
+                                            }`}
+                                        style={{ backgroundColor: color.value }}
+                                        title={color.name}
+                                    />
+                                ))}
+                                <input
+                                    type="color"
+                                    value={theme.color}
+                                    onChange={(e) => updateTheme({ color: e.target.value })}
+                                    className="w-8 h-8 p-0 border-0 rounded-full overflow-hidden cursor-pointer"
+                                    title="Personalizado"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Selector de Tamaño de Fuente */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Tamaño de Texto
+                            </label>
+                            <div className="flex gap-2">
+                                {[
+                                    { label: 'Pequeño', value: 'small', size: 'text-sm' },
+                                    { label: 'Mediano', value: 'medium', size: 'text-base' },
+                                    { label: 'Grande', value: 'large', size: 'text-lg' },
+                                ].map((size) => (
+                                    <button
+                                        key={size.value}
+                                        onClick={() => updateTheme({ fontSize: size.value })}
+                                        className={`px-4 py-2 rounded-lg border transition-colors ${theme.fontSize === size.value
+                                            ? 'bg-gray-900 text-white border-gray-900'
+                                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                            } ${size.size}`}
+                                    >
+                                        {size.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

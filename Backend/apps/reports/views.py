@@ -12,11 +12,19 @@ class ReportView(APIView):
 
     def post(self, request):
         try:
+            # Extraer el schema del tenant actual
+            tenant_schema = request.tenant.schema_name
+            print(f"DEBUG: Tenant schema: {tenant_schema}")
+            
+            # Agregar tenant_schema al payload
+            data = request.data.copy()
+            data['tenant_schema'] = tenant_schema
+            
             # Forward request to reports microservice
             print(f"DEBUG: Requesting report from {settings.REPORTS_SERVICE_URL}/generar-reporte-ia")
             response = requests.post(
                 f"{settings.REPORTS_SERVICE_URL}/generar-reporte-ia",
-                json=request.data
+                json=data
             )
             
             print(f"DEBUG: Microservice response status: {response.status_code}")

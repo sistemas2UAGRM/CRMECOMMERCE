@@ -87,7 +87,7 @@ except Exception as e:
 # --- LÓGICA DE CONSULTAS SQL (BASADA EN TUS MODELOS) ---
 # ==============================================================================
 # Cada función _get_... sabe cómo construir y ejecutar una consulta SQL.
-def _get_ventas_totales(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_ventas_totales(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
         SELECT 
             DATE(fecha_creacion) as fecha, 
@@ -100,9 +100,9 @@ def _get_ventas_totales(params: dict, date_range: dict) -> pd.DataFrame:
         GROUP BY DATE(fecha_creacion)
         ORDER BY fecha;
     """)
-    return pd.read_sql(sql_query, engine, params=date_range)
+    return pd.read_sql(sql_query, conn, params=date_range)
 
-def _get_ticket_promedio(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_ticket_promedio(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
         SELECT 
             DATE(fecha_creacion) as fecha, 
@@ -116,9 +116,9 @@ def _get_ticket_promedio(params: dict, date_range: dict) -> pd.DataFrame:
         GROUP BY DATE(fecha_creacion)
         ORDER BY fecha;
     """)
-    return pd.read_sql(sql_query, engine, params=date_range)
+    return pd.read_sql(sql_query, conn, params=date_range)
 
-def _get_productos_mas_vendidos(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_productos_mas_vendidos(params: dict, date_range: dict, conn) -> pd.DataFrame:
     limit = int(params.get("limit", 10))
     sql_query = text("""
         SELECT 
@@ -136,9 +136,9 @@ def _get_productos_mas_vendidos(params: dict, date_range: dict) -> pd.DataFrame:
         ORDER BY total_unidades_vendidas DESC
         LIMIT :limit;
     """)
-    return pd.read_sql(sql_query, engine, params={**date_range, "limit": limit})
+    return pd.read_sql(sql_query, conn, params={**date_range, "limit": limit})
 
-def _get_ventas_por_categoria(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_ventas_por_categoria(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
         SELECT 
             c.nombre as categoria,
@@ -155,9 +155,9 @@ def _get_ventas_por_categoria(params: dict, date_range: dict) -> pd.DataFrame:
         GROUP BY c.nombre
         ORDER BY total_monto_vendido DESC;
     """)
-    return pd.read_sql(sql_query, engine, params=date_range)
+    return pd.read_sql(sql_query, conn, params=date_range)
 
-def _get_pedidos_por_estado(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_pedidos_por_estado(params: dict, date_range: dict, conn) -> pd.DataFrame:
     metric_map = {
         'pedidos_pendientes': ['pendiente'],
         'pedidos_enviados': ['enviado'],
@@ -176,9 +176,9 @@ def _get_pedidos_por_estado(params: dict, date_range: dict) -> pd.DataFrame:
             AND p.estado IN :estados
         ORDER BY p.fecha_creacion;
     """)
-    return pd.read_sql(sql_query, engine, params={**date_range, "estados": tuple(estados)})
+    return pd.read_sql(sql_query, conn, params={**date_range, "estados": tuple(estados)})
 
-def _get_stock_actual(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_stock_actual(params: dict, date_range: dict, conn) -> pd.DataFrame:
     where_clause = ""
     if params.get('metric') == 'inventario_bajo':
         where_clause = "WHERE aa.cantidad <= 10"
@@ -197,9 +197,9 @@ def _get_stock_actual(params: dict, date_range: dict) -> pd.DataFrame:
         {where_clause}
         ORDER BY aa.cantidad ASC, p.nombre;
     """)
-    return pd.read_sql(sql_query, engine)
+    return pd.read_sql(sql_query, conn)
 
-def _get_clientes_nuevos(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_clientes_nuevos(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
         WITH PrimeraCompra AS (
             SELECT 
@@ -221,9 +221,9 @@ def _get_clientes_nuevos(params: dict, date_range: dict) -> pd.DataFrame:
         WHERE pc.fecha_primera_compra BETWEEN :start_date AND :end_date
         ORDER BY pc.fecha_primera_compra DESC;
     """)
-    return pd.read_sql(sql_query, engine, params=date_range)
+    return pd.read_sql(sql_query, conn, params=date_range)
 
-def _get_clientes_frecuentes(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_clientes_frecuentes(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
         SELECT 
             u.email as email_cliente,
@@ -239,9 +239,9 @@ def _get_clientes_frecuentes(params: dict, date_range: dict) -> pd.DataFrame:
         HAVING COUNT(p.id) > 1
         ORDER BY total_pedidos DESC;
     """)
-    return pd.read_sql(sql_query, engine, params=date_range)
+    return pd.read_sql(sql_query, conn, params=date_range)
 
-def _get_todos_clientes(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_todos_clientes(params: dict, date_range: dict, conn) -> pd.DataFrame:
     """Lista todos los clientes del sistema con sus datos básicos y estadísticas de compras"""
     sql_query = text("""
         SELECT 
@@ -257,13 +257,12 @@ def _get_todos_clientes(params: dict, date_range: dict) -> pd.DataFrame:
             COALESCE(SUM(CASE WHEN p.estado IN ('pagado', 'enviado', 'entregado') THEN p.total ELSE 0 END), 0) as total_gastado
         FROM users_user AS u
         LEFT JOIN pedidos_pedido AS p ON u.id = p.cliente_id
-        WHERE u.is_staff = false AND u.is_superuser = false
         GROUP BY u.id, u.email, u.username, u.first_name, u.last_name, u.celular, u.is_active, u.date_joined
         ORDER BY u.date_joined DESC;
     """)
-    return pd.read_sql(sql_query, engine)
+    return pd.read_sql(sql_query, conn)
 
-def _get_inventario_por_categoria(params: dict, date_range: dict) -> pd.DataFrame:
+def _get_inventario_por_categoria(params: dict, date_range: dict, conn) -> pd.DataFrame:
     """Muestra el inventario agrupado por categoría de productos"""
     sql_query = text("""
         SELECT 
@@ -281,9 +280,9 @@ def _get_inventario_por_categoria(params: dict, date_range: dict) -> pd.DataFram
         GROUP BY c.nombre
         ORDER BY stock_total DESC;
     """)
-    return pd.read_sql(sql_query, engine)
+    return pd.read_sql(sql_query, conn)
 
-def _not_implemented(params: dict, date_range: dict) -> pd.DataFrame:
+def _not_implemented(params: dict, date_range: dict, conn) -> pd.DataFrame:
     metric = params.get('metric')
     if metric in ['costos_totales', 'margen_beneficio', 'rotacion_inventario']:
         raise NotImplementedError(f"Métrica '{metric}' no implementable. Faltan datos de 'costo'.")
@@ -336,6 +335,7 @@ def get_report_dataframe(parametros: dict) -> pd.DataFrame:
 
     metric = parametros.get('metric')
     date_range = parametros.get('date_range')
+    tenant_schema = parametros.get('tenant_schema')
     
     if not metric:
         raise HTTPException(status_code=400, detail="La IA no pudo determinar una métrica.")
@@ -350,8 +350,23 @@ def get_report_dataframe(parametros: dict) -> pd.DataFrame:
     handler_function = METRIC_HANDLERS.get(metric, _not_implemented)
     
     print(f"Generando reporte para métrica: {metric} usando {handler_function.__name__}")
+    
+    # Validar tenant_schema para prevenir SQL injection
+    if tenant_schema:
+        import re
+        if not re.match(r'^[a-z0-9_]+$', tenant_schema):
+            raise HTTPException(status_code=400, detail="Invalid tenant schema name")
+        print(f"DEBUG: Configurando search_path para schema: {tenant_schema}")
 
-    df = handler_function(parametros, date_range)
+    # Ejecutar consulta con el schema del tenant
+    with engine.connect() as conn:
+        # Establecer el search_path al schema del tenant
+        if tenant_schema:
+            conn.execute(text(f"SET search_path TO {tenant_schema}, public"))
+            print(f"DEBUG: search_path configurado a: {tenant_schema}, public")
+        
+        # Ejecutar la función handler pasando la conexión
+        df = handler_function(parametros, date_range, conn)
     
     if df is None or (isinstance(df, pd.DataFrame) and df.empty):
         print(f"Advertencia: La consulta para '{metric}' no devolvió datos.")
