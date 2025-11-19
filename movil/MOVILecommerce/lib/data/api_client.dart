@@ -18,7 +18,7 @@ class ApiClient {
       BaseOptions(
         // MULTI-TENANT: baseUrl sin subdominio por defecto
         // Se configurará dinámicamente con setTenant()
-        baseUrl: 'http://10.0.2.2:8000/api',
+        baseUrl: 'http://20.171.166.152:8000/api',
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -126,16 +126,16 @@ class ApiClient {
 
     // Actualizar baseUrl - usar 10.0.2.2 para emulador Android
     // Para dispositivo físico cambiar a IP local (ej: 192.168.1.XX)
-    final newBaseUrl = 'http://10.0.2.2:8000/api';
+    final newBaseUrl = 'http://20.171.166.152:8000/api';
 
     dio.options.baseUrl = newBaseUrl;
 
     // IMPORTANTE: Agregar Host header con el subdominio para django-tenants
-    dio.options.headers['Host'] = '$subdominio.localhost:8000';
+    dio.options.headers['Host'] = '$subdominio.20.171.166.152:8000';
 
     print('✅ Tenant configurado: $subdominio');
     print('✅ Nueva baseUrl: $newBaseUrl');
-    print('✅ Host header: $subdominio.localhost:8000');
+    print('✅ Host header: $subdominio.20.171.166.152:8000');
   }
 
   /// Obtiene el tenant actual configurado
@@ -146,6 +146,6 @@ class ApiClient {
   /// Limpia la configuración del tenant
   Future<void> clearTenant() async {
     _currentTenant = null;
-    dio.options.baseUrl = 'http://10.0.2.2:8000/api'; // URL por defecto
+    dio.options.baseUrl = 'http://20.171.166.152:8000/api'; // URL por defecto
   }
 }

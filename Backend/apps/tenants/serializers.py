@@ -34,20 +34,6 @@ class TenantRegisterSerializer(serializers.Serializer):
         with transaction.atomic():
             # 1. Crear el Cliente (Tenant)
             # Esto dispara la creación del ESQUEMA en Postgres
-            tenant = Client.objects.create(
-                schema_name=schema_name,
-                name=tienda_name
-            )
-
-            # 2. Crear el Dominio asociado
-            # IMPORTANTE: Ajustar según tu entorno (localhost o producción)
-            domain_url = f"{schema_name}.localhost" # Para desarrollo
-            # domain_url = f"{schema_name}.tudominio.com" # Para producción
-            
-            Domain.objects.create(
-                domain=domain_url,
-                tenant=tenant,
-                is_primary=True
             )
 
             # 3. Crear el Usuario Admin DENTRO del nuevo esquema

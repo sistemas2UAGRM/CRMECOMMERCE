@@ -256,7 +256,7 @@ class StripeWebhookView(APIView):
     Escucha los webhooks de Stripe para actualizar el estado de los pagos y pedidos.
     
     Para desarrollo local, usa Stripe CLI:
-    stripe listen --forward-to localhost:8000/api/ecommerce/pagos/webhooks/stripe/
+    stripe listen --forward-to 20.171.166.152:8000/api/ecommerce/pagos/webhooks/stripe/
     
     Para producción, configura el webhook en: https://dashboard.stripe.com/webhooks
     """

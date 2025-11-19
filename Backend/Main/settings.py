@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '10.0.2.2','localhost','*']
+ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '10.0.2.2','localhost', '20.171.166.152', '*']
 
 # Apps que viven en el esquema 'public' (Comunes a todos)
 SHARED_APPS = (
@@ -110,126 +110,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'main.wsgi.application'
-
-# --- VARIABLES DE ENTORNO ---
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
-STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
-SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
-MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY')
-MAILGUN_DOMAIN = os.getenv('MAILGUN_DOMAIN')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@tudominio.com')
-
-# --- MICROSERVICIOS (API GATEWAY) ---
-PREDICTION_SERVICE_URL = os.getenv('PREDICTION_SERVICE_URL', 'http://localhost:8002')
-REPORTS_SERVICE_URL = os.getenv('REPORTS_SERVICE_URL', 'http://localhost:8001')
-
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL')
-    )
-}
-
-DATABASES['default']['ENGINE'] = 'django_tenants.postgresql_backend'
-
-DATABASE_ROUTERS = (
-    'django_tenants.routers.TenantSyncRouter',
-)
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
-]
-
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = os.getenv('TIME_ZONE', 'America/La_Paz')
-USE_I18N = True
-USE_TZ = True
-
-STATIC_URL = 'static/'
-MEDIA_URL = '/media/'  
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Mantemos del anterior backend
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
-    ],
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ],
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-}
-
-"""CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite
-    "http://localhost:3000",  # React
-    "http://localhost:8080",  # Vue
-    "http://localhost:4200",  # Angular
-    "http://localhost:4000",
-
-    # En producción aquí irían tus dominios reales
-    # "https://pepita.mitienda.com",
-]"""
-
-# Comenta o elimina CORS_ALLOWED_ORIGINS estático y usa esto:
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^http://.+\.localhost:5173$",   # Permite cualquier subdominio en puerto 5173
-    r"^http://localhost:5173$",       # Permite localhost directo
-    r"^http://.+\.localhost:3000$",   # Permite cualquier subdominio en puerto 3000
-    r"^http://localhost:3000$",       # Permite localhost directo
-    r"^http://.+\.localhost:8080$",   # Permite cualquier subdominio en puerto 8080
-    r"^http://localhost:8080$",       # Permite localhost directo
-    r"^http://.+\.localhost:4200$",   # Permite cualquier subdominio en puerto 4200
-    r"^http://localhost:4200$",       # Permite localhost directo
-    r"^http://.+\.localhost:4000$",   # Permite cualquier subdominio en puerto 4000
-    r"^http://localhost:4000$",       # Permite localhost directo
-    r"^http://.+\.10\.0\.2\.2:8000$",           # Emulador Android (alternativa)
-    r"^http://.+\.192\.168\.\d+\.\d+:8000$",    # Dispositivo real
-]
-
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOW_CREDENTIALS = True
-
-SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
             'type': 'apiKey',
@@ -243,7 +123,7 @@ SWAGGER_SETTINGS = {
 
 REDOC_SETTINGS = {'LAZY_RENDERING': False}
 
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://20.171.166.152:6379/0')
 CELERY_RESULT_BACKEND = 'django-db' 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
