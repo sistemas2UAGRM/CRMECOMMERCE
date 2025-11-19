@@ -33,8 +33,6 @@ import GestionUsuarios from "../modulos/usuarios/admin/GestionUsuarios";
 // Módulo de IA
 import ReportPage from "../modulos/ai/ReportPage";
 import PredictionPage from "../modulos/ai/PredictionPage";
-import PredictionPage from "../modulos/ai/PredictionPage";
-import ReportPage from "../modulos/ai/ReportPage";
 
 const sidebarItems = [
   { name: "Usuarios", icon: <Users size={22} />, component: <GestionUsuarios /> },
