@@ -32,7 +32,7 @@ class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         # Campos mínimos a exponer en listados públicos/administrativos
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'is_active', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'is_active', 'is_staff', 'date_joined']
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip()
@@ -418,7 +418,7 @@ class UserAdminListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 
-                  'last_name', 'is_active', 'role', 'fecha_de_nacimiento',
+                  'last_name', 'is_active', 'is_staff', 'role', 'fecha_de_nacimiento',
                   'sexo', 'celular', 'is_verified'
         ]
 

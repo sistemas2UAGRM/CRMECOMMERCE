@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from .models import Cliente, Segmento
 from apps.crm.crm_preventa.serializers import UsuarioSimpleSerializer
+from apps.users.models import User as CustomUser
 
 class SegmentoSerializer(serializers.ModelSerializer):
     """
@@ -30,14 +31,26 @@ class ClienteSerializer(serializers.ModelSerializer):
         required=False # No es requerido en cada actualización
     )
 
-    # Mostramos el valor legible (ej: "Cliente Activo")
-    estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    # Para ESCRIBIR, aceptamos el ID del usuario
+    usuario_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        source='usuario',
+        write_only=True,
+        required=True
+    )
+
+    # Campo para mostrar el display del estado
+    estado_display = serializers.SerializerMethodField()
+
+    def get_estado_display(self, obj):
+        return obj.get_estado_display()
 
     class Meta:
         model = Cliente
         fields = (
             'id',
             'usuario',
+            'usuario_id',      # Para escribir
             'estado',           # Para escribir (ej: "VIP")
             'estado_display',   # Para leer (ej: "VIP")
             'segmentos',        # Para leer

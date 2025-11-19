@@ -177,7 +177,7 @@ class Actividad(models.Model):
     # --- El Vínculo Genérico (Magia de Django) ---
     # Esto nos permite vincular esta actividad a CUALQUIER otro modelo
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.UUIDField() # Asumimos que los IDs son UUID, o usa PositiveIntegerField si son numéricos
+    object_id = models.PositiveIntegerField()  # IDs numéricos para Potencial, Contacto, Oportunidad
     content_object = GenericForeignKey('content_type', 'object_id')
     # --- Fin del Vínculo Genérico ---
 

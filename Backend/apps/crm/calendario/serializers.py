@@ -46,8 +46,13 @@ class EventoCalendarioSerializer(serializers.ModelSerializer):
 
     def get_relacionado_con(self, obj):
         """Devuelve una representación simple del objeto vinculado."""
-        if obj.content_object:
-            return f"{obj.content_type.name.capitalize()}: {str(obj.content_object)}"
+        if obj.content_type and obj.object_id:
+            model_class = obj.content_type.model_class()
+            try:
+                related_obj = model_class.objects.get(pk=obj.object_id)
+                return f"{obj.content_type.name.capitalize()}: {str(related_obj)}"
+            except:
+                return None
         return None
 
     def create(self, validated_data):

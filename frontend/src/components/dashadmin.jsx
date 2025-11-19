@@ -18,6 +18,10 @@ import Almacenes from "../modulos/productos/almacenes/GestionAlmacenes";
 
 import Empleados from "../modulos/empleados";
 import GestionCarritos from "../modulos/carrito/GestionCarritos";
+import GestionCalendario from "../modulos/crm/calendario/GestionCalendario";
+import GestionClientes from "../modulos/crm/clientes/GestionClientes";
+import GestionPreventa from "../modulos/crm/crm_preventa/GestionPreventa";
+import GestionSoporte from "../modulos/crm/soporte/GestionSoporte";
 import Bitacora from "./Bitacora";
 import UserProfile from "./UserProfile";
 
@@ -43,7 +47,15 @@ const sidebarItems = [
   { name: "Carritos Activos", icon: <ShoppingCart size={22} />, component: <GestionCarritos /> },
   // { name: "Pedidos", icon: <ClipboardList size={22} />, component: <div>Contenido de Pedidos</div> },
   // { name: "Pagos", icon: <CreditCard size={22} />, component: <div>Contenido de Pagos</div> },
-  // { name: "CRM", icon: <Handshake size={22} />, component: <div>Contenido de CRM</div> },
+  {
+    name: "CRM", icon: <Handshake size={22} />, component: <div>CRM Dashboard Overview</div>,
+    subMenu: [
+      { name: "Calendario", component: <GestionCalendario /> },
+      { name: "Clientes", component: <GestionClientes /> },
+      { name: "Preventa", component: <GestionPreventa /> },
+      { name: "Soporte", component: <GestionSoporte /> },
+    ],
+  },
   // { name: "Reportes", icon: <BarChart2 size={22} />, component: <div>Contenido de Reportes</div> },
   // { name: "IA", icon: <Bot size={22} />, component: <div>Contenido de IA</div> },
 ];
