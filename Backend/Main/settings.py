@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['.localhost', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '10.0.2.2','localhost','*']
 
 # Apps que viven en el esquema 'public' (Comunes a todos)
 SHARED_APPS = (
@@ -88,7 +88,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'main.urls'
+ROOT_URLCONF = 'Main.urls'
 
 TEMPLATES = [
     {
@@ -108,7 +108,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'main.wsgi.application'
+WSGI_APPLICATION = 'Main.wsgi.application'
 
 # --- VARIABLES DE ENTORNO ---
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
@@ -214,6 +214,8 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://localhost:4200$",       # Permite localhost directo
     r"^http://.+\.localhost:4000$",   # Permite cualquier subdominio en puerto 4000
     r"^http://localhost:4000$",       # Permite localhost directo
+    r"^http://.+\.10\.0\.2\.2:8000$",           # Emulador Android (alternativa)
+    r"^http://.+\.192\.168\.\d+\.\d+:8000$",    # Dispositivo real
 ]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
