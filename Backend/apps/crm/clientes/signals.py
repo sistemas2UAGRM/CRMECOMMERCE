@@ -30,10 +30,10 @@ def actualizar_perfil_cliente(sender, instance, **kwargs):
     
     # Verificamos si el pedido se acaba de marcar como pagado
     # (o el estado que uses para "completado")
-    if pedido.estado == Pedido.EstadoPedido.PAGADO and pedido.usuario:
+    if pedido.estado == Pedido.ESTADO_PAGADO and pedido.cliente:
         # Usamos 'get' porque el signal 'crear_perfil_cliente'
         # asegura que el perfil siempre exista.
-        cliente_perfil = Cliente.objects.get(usuario=pedido.usuario)
+        cliente_perfil = Cliente.objects.get(usuario=pedido.cliente)
         
         # Llamamos al método que definimos en el modelo
         cliente_perfil.recalcular_estadisticas()

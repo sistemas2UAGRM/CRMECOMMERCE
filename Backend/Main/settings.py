@@ -63,6 +63,9 @@ TENANT_APPS = (
     'apps.crm.calendario',
     'apps.crm.clientes',
     'apps.crm.soporte',
+
+    # IA Services
+    'apps.ia_services',
 )
 
 # Django Tenants combina ambas listas para que Django arranque
@@ -88,7 +91,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'Main.urls'
+ROOT_URLCONF = 'main.urls'
 
 TEMPLATES = [
     {
@@ -108,7 +111,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Main.wsgi.application'
+WSGI_APPLICATION = 'main.wsgi.application'
 
 # --- VARIABLES DE ENTORNO ---
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
