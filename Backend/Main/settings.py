@@ -63,6 +63,9 @@ TENANT_APPS = (
     'apps.crm.calendario',
     'apps.crm.clientes',
     'apps.crm.soporte',
+
+    # IA Services
+    'apps.ia_services',
 )
 
 # Django Tenants combina ambas listas para que Django arranque

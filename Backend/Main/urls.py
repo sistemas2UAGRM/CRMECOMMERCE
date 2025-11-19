@@ -26,4 +26,5 @@ urlpatterns = [
     path('api/crm/', include('apps.crm.urls')),
     path('api/tenant-info/', TenantInfoView.as_view(), name='tenant-info'),
     path('api/tenants/register/', RegisterTenantView.as_view(), name='tenant-register'),
+    path('api/ia/', include('apps.ia_services.urls')),
 ]

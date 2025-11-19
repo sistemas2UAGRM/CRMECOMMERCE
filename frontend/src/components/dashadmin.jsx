@@ -29,6 +29,8 @@ import api from "../services/api";
 import { getRefreshToken, clearAuthTokens } from "../utils/auth";
 
 import GestionUsuarios from "../modulos/usuarios/admin/GestionUsuarios";
+import PredictionPage from "../modulos/ai/PredictionPage";
+import ReportPage from "../modulos/ai/ReportPage";
 
 const sidebarItems = [
   { name: "Usuarios", icon: <Users size={22} />, component: <GestionUsuarios /> },
@@ -56,8 +58,8 @@ const sidebarItems = [
       { name: "Soporte", component: <GestionSoporte /> },
     ],
   },
-  // { name: "Reportes", icon: <BarChart2 size={22} />, component: <div>Contenido de Reportes</div> },
-  // { name: "IA", icon: <Bot size={22} />, component: <div>Contenido de IA</div> },
+  { name: "IA", icon: <BarChart2 size={22} />, component: <PredictionPage /> },
+  { name: "Reportes", icon: <Bot size={22} />, component: <ReportPage /> },
 ];
 
 /* ------------------ Loader simple (para Suspense) ------------------ */
