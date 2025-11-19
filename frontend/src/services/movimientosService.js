@@ -1,3 +1,4 @@
+// frontend/src/services/movimientosService.js
 import api from "./api";
 const ENDPOINT = "/productos/movimientos-stock/";
 

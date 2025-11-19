@@ -270,11 +270,11 @@ class UserSignupSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """
         Representación personalizada para la respuesta de registro.
-        Indica al cliente que revise su email.
+        Usuario activo inmediatamente (sin verificación de email).
         """
         data = super().to_representation(instance)
-        data['verification_email_sent'] = True
-        data['message'] = "Registro exitoso. Revisa tu email para verificar tu cuenta."
+        data['verification_email_sent'] = False
+        data['message'] = "Registro exitoso. Tu cuenta está activa y lista para usar."
         return data
 
 
@@ -395,11 +395,12 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Credenciales inválidas.', code='authorization')
         if not user.is_active:
             raise serializers.ValidationError('Cuenta desactivada.', code='authorization')
-        if not user.is_verified:
-            raise serializers.ValidationError(
-                'Esta cuenta no ha sido verificada. Revisa tu email.', 
-                code='authorization'
-            )
+        # Verificación de email deshabilitada
+        # if not user.is_verified:
+        #     raise serializers.ValidationError(
+        #         'Esta cuenta no ha sido verificada. Revisa tu email.', 
+        #         code='authorization'
+        #     )
         
         data['user'] = user
         return data

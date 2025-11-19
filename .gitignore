@@ -12,6 +12,11 @@
 # Ignorar carpetas y archivos de Python
 __pycache__/
 *.pyc
+venv/
+env/
+*.egg-info/
+dist/
+build/
 
 # Archivos de configuración de sistema
 .DS_Store

@@ -1,4 +1,4 @@
-// src/components/Menu.jsx
+// frontend/src/modulos/usuarios/admin/Menu.jsx
 import React from "react";
 import { Menu, X } from "lucide-react";
 

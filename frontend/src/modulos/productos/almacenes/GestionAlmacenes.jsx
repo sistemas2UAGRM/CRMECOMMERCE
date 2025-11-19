@@ -1,3 +1,4 @@
+// frontend/src/modulos/productos/almacenes/GestionAlmacenes.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import almacenesService from "../../../services/almacenesService";

@@ -1,4 +1,4 @@
-// src/modulos/carrito/GestionCarritos.jsx
+// frontend/src/modulos/carrito/GestionCarritos.jsx
 import React, { useEffect, useState } from "react";
 import {
     ShoppingCart, Package2, Eye, Search as SearchIcon,

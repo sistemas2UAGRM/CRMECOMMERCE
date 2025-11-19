@@ -1,4 +1,4 @@
-// src/services/categoriasService.js
+// frontend/src/services/categoriasService.js
 import api from "./api";
 
 const ENDPOINT = "/ecommerce/categorias/";

@@ -1,3 +1,4 @@
+# backend/apps/ecommerce/productos/admin.py
 from django.contrib import admin
 from .models import Producto, Categoria, Almacen, ArticuloAlmacen, ImagenProducto, StockMovimiento
 

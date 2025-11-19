@@ -16,9 +16,9 @@ class UserManager(BaseUserManager):
         if not password:
             raise ValueError('El usuario debe tener contraseña')
         email = self.normalize_email(email)
-        extra_fields.setdefault('is_active', False)
-        if extra_fields.get('is_active') is False:
-            extra_fields.setdefault('is_verified', False)
+        # Usuarios activos y verificados automáticamente (sin verificación de email)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_verified', True)
 
         user = self.model(email=email, username=username, **extra_fields)
         user.set_password(password)

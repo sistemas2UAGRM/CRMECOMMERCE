@@ -1,4 +1,4 @@
-// src/modulos/productos/ProductoForm.jsx
+// frontend/src/modulos/productos/ProductoForm.jsx
 import React, { useState, useEffect } from "react";
 import almacenesService from "../../services/almacenesService"; // servicio de almacenes (añadido)
 import toast from "react-hot-toast";

@@ -1,4 +1,4 @@
-// src/services/direccionesService.js
+// frontend/src/services/direccionesService.js
 import api from "./api";
 
 const BASE_URL = "/users/direcciones/";

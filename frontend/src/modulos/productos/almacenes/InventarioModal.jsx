@@ -1,3 +1,4 @@
+// frontend/src/modulos/productos/almacenes/InventarioModal.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import almacenesService from '../../../services/almacenesService';

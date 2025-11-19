@@ -1,3 +1,4 @@
+// frontend/src/components/Bitacora.jsx
 import { useState, useEffect } from 'react';
 import { Clock, User, FileText, Globe, Search, Download, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';

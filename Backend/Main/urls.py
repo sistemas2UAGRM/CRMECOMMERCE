@@ -1,6 +1,7 @@
 # backend/main/urls.py
 from django.contrib import admin
 from django.urls import path, include
+from apps.tenants.views import TenantInfoView, RegisterTenantView
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -23,4 +24,6 @@ urlpatterns = [
     path('api/users/', include('apps.users.urls')),
     path('api/ecommerce/', include('apps.ecommerce.urls')),
     path('api/crm/', include('apps.crm.urls')),
+    path('api/tenant-info/', TenantInfoView.as_view(), name='tenant-info'),
+    path('api/tenants/register/', RegisterTenantView.as_view(), name='tenant-register'),
 ]

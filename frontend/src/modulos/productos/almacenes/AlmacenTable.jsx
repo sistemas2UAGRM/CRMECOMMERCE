@@ -1,3 +1,4 @@
+// frontend/src/modulos/productos/almacenes/AlmacenTable.jsx
 import React from "react";
 
 export default function AlmacenTable({ almacenes = [], onEditar, onEliminar, onVerInventario, cargando }) {

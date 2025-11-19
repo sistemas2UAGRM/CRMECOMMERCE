@@ -1,3 +1,4 @@
+// frontend/src/modulos/usuarios/clientes/components/Ordenes.jsx
 import React, { useState, useEffect } from 'react';
 import pedidosService from '../../../../services/pedidosService';
 import ModalPago from './ModalPago';

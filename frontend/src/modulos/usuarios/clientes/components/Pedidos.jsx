@@ -1,3 +1,4 @@
+// frontend/src/modulos/usuarios/clientes/components/Pedidos.jsx
 import React, { useEffect, useState } from 'react';
 import pedidosService from '../../../../services/pedidosService';
 

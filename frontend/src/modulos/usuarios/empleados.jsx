@@ -1,3 +1,4 @@
+// frontend/src/modulos/usuarios/empleados.jsx
 import React from 'react';
 
 export default function Empleados() {

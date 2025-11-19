@@ -1,4 +1,4 @@
-// src/contexts/AuthContext.jsx (NUEVO)
+// frontend/src/contexts/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { getUser as getLocalUser, getAuthToken, clearAuthTokens } from '../utils/auth';
 import authService from '../services/authService';

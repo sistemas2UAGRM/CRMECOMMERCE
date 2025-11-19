@@ -1,8 +1,24 @@
+// frontend/src/services/api.js
 import axios from "axios";
 import { getAuthToken, getRefreshToken, setAuthTokens, clearAuthTokens } from '../utils/auth';
 
+// --- LÓGICA MULTI-TENANT ---
+const getBaseUrl = () => {
+  const { protocol, hostname } = window.location;
+  
+  if (hostname.includes('localhost') || hostname === '127.0.0.1') {
+    return `${protocol}//${hostname}:8000/api`; 
+  }
+
+  // Configuración para producción (asumiendo que backend y frontend comparten dominio base o usan proxy)
+  // Opción A: Backend en api.tienda1.dominio.com
+  // Opción B: Backend en tienda1.backend.com
+  // Opción C (Recomendada): tienda1.dominio.com/api (Proxy inverso con Nginx)
+  return `${protocol}//${hostname}/api`; 
+};
+
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,4 +1,4 @@
-// src/services/pagosService.js
+// frontend/src/services/pagosService.js
 import api from './api';
 
 const pagosService = {

@@ -1,4 +1,4 @@
-// src/modulos/usuarios/admin/UserTable.jsx
+// frontend/src/modulos/usuarios/admin/UserTable.jsx
 import React from 'react';
 import { Edit, Trash2, UserCheck, UserX, MoreHorizontal } from 'lucide-react';
 
