@@ -1,3 +1,4 @@
+# microservicio_prediccion/app/schemas.py
 from pydantic import BaseModel, Field
 
 class PredictionRequest(BaseModel):

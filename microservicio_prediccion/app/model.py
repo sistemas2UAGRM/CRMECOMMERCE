@@ -1,3 +1,4 @@
+# microservicio_prediccion/app/model.py
 import joblib
 import pandas as pd
 from datetime import timedelta
