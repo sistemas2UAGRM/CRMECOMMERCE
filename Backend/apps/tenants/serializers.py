@@ -34,7 +34,7 @@ class TenantRegisterSerializer(serializers.Serializer):
         with transaction.atomic():
             # 1. Crear el Cliente (Tenant)
             # Esto dispara la creación del ESQUEMA en Postgres
-            )
+            
 
             # 3. Crear el Usuario Admin DENTRO del nuevo esquema
             # Usamos tenant_context para cambiar temporalmente a la nueva BD
