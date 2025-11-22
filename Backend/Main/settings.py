@@ -10,6 +10,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
+<<<<<<< HEAD
+=======
+ALLOWED_HOSTS = ['*']  # Permitir todos los hosts en desarrollo
+>>>>>>> 34ad3944bae40ccd7a13f39cd23ceda33b4ff056
 
 ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '10.0.2.2','localhost', '20.171.166.152', '*']
 
@@ -90,7 +94,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'main.urls'
+ROOT_URLCONF = 'Main.urls'
 
 TEMPLATES = [
     {
@@ -110,7 +114,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'main.wsgi.application'
+WSGI_APPLICATION = 'Main.wsgi.application'
 
 # ==============================================================================
 # BASE DE DATOS (CRÍTICO PARA TENANTS)
