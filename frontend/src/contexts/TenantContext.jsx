@@ -5,7 +5,7 @@ import api from '../services/api';
 const TenantContext = createContext();
 
 // Configura aquí tu dominio principal (sin subdominios)
-const MAIN_DOMAIN = '20.171.166.152'; // Cambiar a 'tudominio.com' en producción
+const MAIN_DOMAIN = '127.0.0.1'; // Cambiar a 'tudominio.com' en producción
 
 export const TenantProvider = ({ children }) => {
     const [tenant, setTenant] = useState(null);
@@ -56,7 +56,7 @@ export const TenantProvider = ({ children }) => {
             <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
                 <h1 className="text-4xl font-bold text-gray-800 mb-4">404</h1>
                 <p className="text-xl text-gray-600">{error}</p>
-                <a href={`http://${MAIN_DOMAIN}:5173`} className="mt-6 text-blue-600 hover:underline">
+                <a href={`http://${MAIN_DOMAIN}:4000`} className="mt-6 text-blue-600 hover:underline">
                     Ir al sitio principal
                 </a>
             </div>

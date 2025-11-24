@@ -17,7 +17,7 @@ class Client(TenantMixin):
 
 class Domain(DomainMixin):
     """
-    Representa el dominio web asociado al cliente. Ej: pepita.mitienda.com
+    Representa el dominio web asociado al cliente.
     """
     def __str__(self):
         return self.domain

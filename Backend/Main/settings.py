@@ -10,10 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
-<<<<<<< HEAD
-=======
-ALLOWED_HOSTS = ['*']  # Permitir todos los hosts en desarrollo
->>>>>>> 34ad3944bae40ccd7a13f39cd23ceda33b4ff056
 
 ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '10.0.2.2','localhost', '20.171.166.152', '*']
 
@@ -94,7 +90,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'Main.urls'
+ROOT_URLCONF = 'main.urls'
 
 TEMPLATES = [
     {
@@ -114,7 +110,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Main.wsgi.application'
+WSGI_APPLICATION = 'main.wsgi.application'
 
 # ==============================================================================
 # BASE DE DATOS (CRÍTICO PARA TENANTS)
@@ -148,6 +144,7 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # ==============================================================================
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -215,7 +212,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4000",
 ]
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True # Útil para desarrollo con subdominios dinámicos
+CORS_ALLOW_ALL_ORIGINS = DEBUG 
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://.+\.localhost:4000$",  # Subdominios en localhost (frontend puerto 4000)
+    r"^http://localhost:4000$",       # Localhost exacto
+    r"^http://127\.0\.0\.1:4000$",    # IP exacta (nota los escapes \.)
+]
 
 # ==============================================================================
 # DOCUMENTACIÓN (SWAGGER)

@@ -21,7 +21,6 @@ export default function AppRouter() {
     return (
       <Routes>
         <Route path="/" element={<DashboardLanding />} />
-       {/* CAMBIO: Ahora /registro usa el formulario de CREAR TIENDA */}
         <Route path="/registro" element={<RegisterStore />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
