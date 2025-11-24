@@ -1,4 +1,4 @@
-# apps/users/serializers.py
+# backend/apps/users/serializers.py
 """
 Serializers para la app `users`.
 

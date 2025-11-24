@@ -5,7 +5,6 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 
-# Ajusta este import si tu modelo de producto está en otra app
 from ..productos.models import Producto
 
 User = settings.AUTH_USER_MODEL

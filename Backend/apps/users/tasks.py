@@ -1,4 +1,4 @@
-# apps/users/tasks.py
+# backend/apps/users/tasks.py
 """
 Tareas asíncronas relacionadas con usuarios.
 Ejemplo: enviar email de verificación usando Mailgun (HTTP API).

@@ -1,3 +1,4 @@
+# backend/apps/users/models.py
 import uuid
 from django.db import models, transaction 
 from django.contrib.auth.models import AbstractUser, Group, Permission
