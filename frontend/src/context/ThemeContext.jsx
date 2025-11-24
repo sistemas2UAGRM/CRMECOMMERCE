@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
+import { getAuthToken } from '../utils/auth';
 
 const ThemeContext = createContext();
 
@@ -18,6 +19,12 @@ export const ThemeProvider = ({ children }) => {
     // Cargar preferencias del usuario al iniciar
     useEffect(() => {
         const loadPreferences = async () => {
+            const token = getAuthToken();
+            if (!token) {
+                setIsLoaded(true);
+                return;
+            }
+
             try {
                 const response = await api.get('/users/users/profile/');
                 const prefs = response.data.profile?.preferencias_ui;

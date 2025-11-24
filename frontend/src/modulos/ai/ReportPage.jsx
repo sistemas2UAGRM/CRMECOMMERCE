@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import aiService from '../../services/aiService';
-import { FileText, Download, Loader, File, Sparkles, X, Eye, History, Copy } from 'lucide-react';
+import { FileText, Download, Loader, File, Sparkles, X, Eye, History, Copy, Mic, MicOff } from 'lucide-react';
 
 const PLANTILLAS_PROMPT = [
   {
@@ -39,6 +39,48 @@ export default function ReportPage() {
   const [mostrarPlantillas, setMostrarPlantillas] = useState(false);
   const [mostrarVistaPrevia, setMostrarVistaPrevia] = useState(false);
   const [historialReportes, setHistorialReportes] = useState([]);
+  const [isListening, setIsListening] = useState(false);
+
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast.error('Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = 'es-ES';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast.success('Escuchando... habla ahora');
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setPrompt((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Error de reconocimiento de voz:', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        toast.error('Permiso de micrófono denegado.');
+      } else {
+        toast.error('No se pudo entender el audio. Intenta de nuevo.');
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,14 +92,14 @@ export default function ReportPage() {
     setCargando(true);
     try {
       const response = await aiService.generateReport(prompt, formato);
-      
+
       if (formato === 'json') {
         setReporte(response.data);
       } else {
         // Para archivos binarios (Excel, PDF)
         setReporte({ tipo: formato, blob: response.data });
       }
-      
+
       // Guardar en historial
       const nuevoReporte = {
         id: Date.now(),
@@ -66,7 +108,7 @@ export default function ReportPage() {
         fecha: new Date().toLocaleString(),
       };
       setHistorialReportes(prev => [nuevoReporte, ...prev].slice(0, 5)); // Mantener últimos 5
-      
+
       toast.success('Reporte generado exitosamente.');
     } catch (error) {
       toast.error('Error al generar el reporte. Intenta nuevamente.');
@@ -213,7 +255,7 @@ export default function ReportPage() {
               id="prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pr-20"
               placeholder="Ej: Genera un reporte de ventas del último mes con totales por producto en formato Excel"
               rows={4}
               required
@@ -223,10 +265,21 @@ export default function ReportPage() {
                 type="button"
                 onClick={() => setPrompt('')}
                 className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                title="Limpiar texto"
               >
                 <X size={20} />
               </button>
             )}
+            {/* Botón de micrófono desactivado temporalmente
+            <button
+              type="button"
+              onClick={handleVoiceInput}
+              className={`absolute top-2 right-2 transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-green-600'}`}
+              title="Usar micrófono"
+            >
+              {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+            </button>
+            */}
           </div>
           <p className="text-xs text-gray-500 mt-1">
             💡 Tip: Describe claramente qué datos necesitas, el período de tiempo, y el formato deseado
@@ -298,7 +351,7 @@ export default function ReportPage() {
               Descargar
             </button>
           </div>
-          
+
           {formato === 'json' ? (
             <div className="bg-white p-4 rounded-md overflow-x-auto border border-gray-300 shadow-inner max-h-96">
               <div className="flex items-center justify-between mb-2">
