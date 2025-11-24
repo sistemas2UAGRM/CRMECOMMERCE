@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Search, Bell, HelpCircle, Settings, User,
   Users, UserCheck, FileText, Shield, Package, ShoppingCart,
-  CreditCard, Handshake, BarChart2, Bot, ClipboardList, LogOut,
+  CreditCard, Handshake, BarChart2, Bot, ClipboardList, LogOut, BookOpen,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -33,6 +33,7 @@ import GestionUsuarios from "../modulos/usuarios/admin/GestionUsuarios";
 // Módulo de IA
 import ReportPage from "../modulos/ai/ReportPage";
 import PredictionPage from "../modulos/ai/PredictionPage";
+import ManualAdmin from "../modulos/manual/ManualAdmin";
 
 const sidebarItems = [
   { name: "Usuarios", icon: <Users size={22} />, component: <GestionUsuarios /> },
@@ -60,7 +61,6 @@ const sidebarItems = [
       { name: "Soporte", component: <GestionSoporte /> },
     ],
   },
-  // { name: "Reportes", icon: <BarChart2 size={22} />, component: <div>Contenido de Reportes</div> },
   {
     name: "IA", icon: <Bot size={22} />, component: <div>Módulo de Inteligencia Artificial</div>,
     subMenu: [
@@ -68,6 +68,7 @@ const sidebarItems = [
       { name: "Reportes", component: <ReportPage /> },
     ],
   },
+  { name: "Manual", icon: <BookOpen size={22} />, component: <ManualAdmin /> },
 ];
 
 /* ------------------ Loader simple (para Suspense) ------------------ */

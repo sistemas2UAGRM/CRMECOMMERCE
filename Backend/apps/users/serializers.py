@@ -398,7 +398,7 @@ class LoginSerializer(serializers.Serializer):
         # Verificación de email deshabilitada
         # if not user.is_verified:
         #     raise serializers.ValidationError(
-        #         'Esta cuenta no ha sido verificada. Revisa tu email.', 
+        #         'Esta cuenta no ha sido verificada. Revisa tu email.',
         #         code='authorization'
         #     )
         
@@ -420,7 +420,7 @@ class UserAdminListSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 
                   'last_name', 'is_active', 'is_staff', 'role', 'fecha_de_nacimiento',
-                  'sexo', 'celular', 'is_verified'
+                  'sexo', 'celular'
         ]
 
     def get_role(self, obj):

@@ -1,4 +1,3 @@
-#apps/users/models.py
 import uuid
 from django.db import models, transaction 
 from django.contrib.auth.models import AbstractUser, Group, Permission
@@ -16,9 +15,10 @@ class UserManager(BaseUserManager):
         if not password:
             raise ValueError('El usuario debe tener contraseña')
         email = self.normalize_email(email)
-        # Usuarios activos y verificados automáticamente (sin verificación de email)
+        
+        # Usuarios activos automáticamente
         extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('is_verified', True)
+        # ELIMINADO: extra_fields.setdefault('is_verified', True)
 
         user = self.model(email=email, username=username, **extra_fields)
         user.set_password(password)
@@ -29,56 +29,53 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True) 
-        extra_fields.setdefault('is_verified', True)
+        # ELIMINADO: extra_fields.setdefault('is_verified', True)
 
         if not password:
             raise ValueError('Superuser debe tener contraseña')
         return self.create_user(email, username, password, **extra_fields)
     
 class User(AbstractUser):
-   SEXO_OPCIONES = (
+    SEXO_OPCIONES = (
         ('M', 'Masculino'),
         ('F', 'Femenino'),
         ('O', 'Otro'),
-   )
-   email = models.EmailField(unique=True, verbose_name="Correo Electronico")
-   fecha_de_nacimiento = models.DateField(null=True, blank=True)
-   sexo = models.CharField(max_length=1,choices=SEXO_OPCIONES, null=True, blank=True)
-   celular = models.CharField(max_length=20, null=True, blank=True)
-   is_verified = models.BooleanField(
-        default=False,
-        help_text="Indica si el usuario ha verificado su correo electrónico."
-   )
-   verification_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        help_text="Token único para la verificación de email."
-   )
-   acepta_marketing = models.BooleanField(
+    )
+    email = models.EmailField(unique=True, verbose_name="Correo Electronico")
+    fecha_de_nacimiento = models.DateField(null=True, blank=True)
+    sexo = models.CharField(max_length=1,choices=SEXO_OPCIONES, null=True, blank=True)
+    celular = models.CharField(max_length=20, null=True, blank=True)
+    
+    # --- CAMPOS ELIMINADOS PARA EVITAR ERROR DE BASE DE DATOS ---
+    # is_verified = ... (Eliminado)
+    # verification_uuid = ... (Eliminado)
+    
+    acepta_marketing = models.BooleanField(
         default=False,
         help_text="Indica si el usuario acepta recibir correos de marketing."
-   )
-   groups = models.ManyToManyField(
-      Group,
-      verbose_name='groups',
-      blank=True,
-      help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-      related_name="user_set_custom",  
-      related_query_name="user",
-   )
-   user_permissions = models.ManyToManyField(
-      Permission,
-      verbose_name='user permissions',
-      blank=True,
-      help_text='Specific permissions for this user.',
-      related_name="user_permissions_custom", # Nombre único para la relación inversa
-      related_query_name="user",
-   )
-   objects = UserManager()
-   USERNAME_FIELD = 'email'
-   REQUIRED_FIELDS = ['username', 'first_name']
+    )
+    groups = models.ManyToManyField(
+       Group,
+       verbose_name='groups',
+       blank=True,
+       help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+       related_name="user_set_custom",  
+       related_query_name="user",
+    )
+    user_permissions = models.ManyToManyField(
+       Permission,
+       verbose_name='user permissions',
+       blank=True,
+       help_text='Specific permissions for this user.',
+       related_name="user_permissions_custom", # Nombre único para la relación inversa
+       related_query_name="user",
+    )
+    objects = UserManager()
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name']
 
-   def __str__(self):
-      return self.get_full_name() if self.first_name else self.email
+    def __str__(self):
+       return self.get_full_name() if self.first_name else self.email
 
 class UserProfile(models.Model):
     TIPO_DOC_FISCAL = (
