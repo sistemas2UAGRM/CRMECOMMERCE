@@ -5,7 +5,7 @@ import api from '../services/api';
 const TenantContext = createContext();
 
 // Configura aquí tu dominio principal (sin subdominios)
-const MAIN_DOMAIN = 'localhost'; // Cambiar a 'tudominio.com' en producción
+const MAIN_DOMAIN = import.meta.env.VITE_SERVER_IP;; // Cambiar a 'tudominio.com' en producción
 
 export const TenantProvider = ({ children }) => {
     const [tenant, setTenant] = useState(null);

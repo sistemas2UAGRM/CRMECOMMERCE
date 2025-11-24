@@ -86,37 +86,62 @@ except Exception as e:
 # ==============================================================================
 # --- LÓGICA DE CONSULTAS SQL (BASADA EN TUS MODELOS) ---
 # ==============================================================================
+
+VALID_SALES_STATUSES = ('pagado', 'enviado', 'entregado')
+
+def _get_date_grouping_sql(granularity: str, column_name: str) -> str:
+    """Genera SQL para agrupar fechas según el motor de base de datos (SQLite vs Postgres)"""
+    is_sqlite = 'sqlite' in str(engine.url)
+    if is_sqlite:
+        if granularity == 'month':
+            return f"strftime('%Y-%m', {column_name})"
+        elif granularity == 'week':
+            return f"strftime('%Y-%W', {column_name})"
+        return f"DATE({column_name})"
+    else:
+        if granularity == 'month':
+            return f"DATE_TRUNC('month', {column_name})"
+        elif granularity == 'week':
+            return f"DATE_TRUNC('week', {column_name})"
+        return f"DATE({column_name})"
+
 # Cada función _get_... sabe cómo construir y ejecutar una consulta SQL.
 def _get_ventas_totales(params: dict, date_range: dict, conn) -> pd.DataFrame:
-    sql_query = text("""
+    granularity = params.get("granularity", "day")
+    date_col = _get_date_grouping_sql(granularity, "fecha_creacion")
+
+    sql_query = text(f"""
         SELECT 
-            DATE(fecha_creacion) as fecha, 
+            {date_col} as fecha, 
             COUNT(id) as cantidad_pedidos,
             SUM(total) as ventas_totales
         FROM pedidos_pedido
         WHERE 
             fecha_creacion BETWEEN :start_date AND :end_date
-            AND estado IN ('pagado', 'enviado', 'entregado')
-        GROUP BY DATE(fecha_creacion)
-        ORDER BY fecha;
+            AND estado IN :statuses
+        GROUP BY 1
+        ORDER BY 1;
     """)
-    return pd.read_sql(sql_query, conn, params=date_range)
+    return pd.read_sql(sql_query, conn, params={**date_range, "statuses": VALID_SALES_STATUSES})
 
 def _get_ticket_promedio(params: dict, date_range: dict, conn) -> pd.DataFrame:
-    sql_query = text("""
+    granularity = params.get("granularity", "day")
+    date_col = _get_date_grouping_sql(granularity, "fecha_creacion")
+
+    sql_query = text(f"""
         SELECT 
-            DATE(fecha_creacion) as fecha, 
+            {date_col} as fecha, 
             COUNT(id) as cantidad_pedidos,
             SUM(total) as ventas_totales,
             AVG(total) as ticket_promedio
         FROM pedidos_pedido
         WHERE 
             fecha_creacion BETWEEN :start_date AND :end_date
-            AND estado IN ('pagado', 'enviado', 'entregado')
-        GROUP BY DATE(fecha_creacion)
-        ORDER BY fecha;
+            AND estado IN :statuses
+        GROUP BY 1
+        ORDER BY 1;
     """)
-    return pd.read_sql(sql_query, conn, params=date_range)
+    return pd.read_sql(sql_query, conn, params={**date_range, "statuses": VALID_SALES_STATUSES})
 
 def _get_productos_mas_vendidos(params: dict, date_range: dict, conn) -> pd.DataFrame:
     limit = int(params.get("limit", 10))
@@ -131,12 +156,12 @@ def _get_productos_mas_vendidos(params: dict, date_range: dict, conn) -> pd.Data
         JOIN productos_producto AS p ON dp.producto_id = p.id
         WHERE 
             pe.fecha_creacion BETWEEN :start_date AND :end_date
-            AND pe.estado IN ('pagado', 'enviado', 'entregado')
+            AND pe.estado IN :statuses
         GROUP BY p.nombre, p.codigo
         ORDER BY total_unidades_vendidas DESC
         LIMIT :limit;
     """)
-    return pd.read_sql(sql_query, conn, params={**date_range, "limit": limit})
+    return pd.read_sql(sql_query, conn, params={**date_range, "limit": limit, "statuses": VALID_SALES_STATUSES})
 
 def _get_ventas_por_categoria(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
@@ -151,11 +176,11 @@ def _get_ventas_por_categoria(params: dict, date_range: dict, conn) -> pd.DataFr
         JOIN productos_categoria AS c ON c.id = pc.categoria_id
         WHERE 
             pe.fecha_creacion BETWEEN :start_date AND :end_date
-            AND pe.estado IN ('pagado', 'enviado', 'entregado')
+            AND pe.estado IN :statuses
         GROUP BY c.nombre
         ORDER BY total_monto_vendido DESC;
     """)
-    return pd.read_sql(sql_query, conn, params=date_range)
+    return pd.read_sql(sql_query, conn, params={**date_range, "statuses": VALID_SALES_STATUSES})
 
 def _get_pedidos_por_estado(params: dict, date_range: dict, conn) -> pd.DataFrame:
     metric_map = {
@@ -180,8 +205,12 @@ def _get_pedidos_por_estado(params: dict, date_range: dict, conn) -> pd.DataFram
 
 def _get_stock_actual(params: dict, date_range: dict, conn) -> pd.DataFrame:
     where_clause = ""
+    query_params = {}
+    
     if params.get('metric') == 'inventario_bajo':
-        where_clause = "WHERE aa.cantidad <= 10"
+        threshold = int(params.get('threshold', 10))
+        where_clause = "WHERE aa.cantidad <= :threshold"
+        query_params['threshold'] = threshold
         
     sql_query = text(f"""
         SELECT 
@@ -197,7 +226,7 @@ def _get_stock_actual(params: dict, date_range: dict, conn) -> pd.DataFrame:
         {where_clause}
         ORDER BY aa.cantidad ASC, p.nombre;
     """)
-    return pd.read_sql(sql_query, conn)
+    return pd.read_sql(sql_query, conn, params=query_params)
 
 def _get_clientes_nuevos(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
@@ -209,7 +238,7 @@ def _get_clientes_nuevos(params: dict, date_range: dict, conn) -> pd.DataFrame:
                 COUNT(p.id) as total_pedidos
             FROM pedidos_pedido AS p
             JOIN users_user AS u ON p.cliente_id = u.id
-            WHERE p.estado IN ('pagado', 'enviado', 'entregado')
+            WHERE p.estado IN :statuses
             GROUP BY u.email, u.username
         )
         SELECT 
@@ -221,7 +250,7 @@ def _get_clientes_nuevos(params: dict, date_range: dict, conn) -> pd.DataFrame:
         WHERE pc.fecha_primera_compra BETWEEN :start_date AND :end_date
         ORDER BY pc.fecha_primera_compra DESC;
     """)
-    return pd.read_sql(sql_query, conn, params=date_range)
+    return pd.read_sql(sql_query, conn, params={**date_range, "statuses": VALID_SALES_STATUSES})
 
 def _get_clientes_frecuentes(params: dict, date_range: dict, conn) -> pd.DataFrame:
     sql_query = text("""
@@ -234,12 +263,12 @@ def _get_clientes_frecuentes(params: dict, date_range: dict, conn) -> pd.DataFra
         JOIN users_user AS u ON p.cliente_id = u.id
         WHERE 
             p.fecha_creacion BETWEEN :start_date AND :end_date
-            AND p.estado IN ('pagado', 'enviado', 'entregado')
+            AND p.estado IN :statuses
         GROUP BY u.email, u.username
         HAVING COUNT(p.id) > 1
         ORDER BY total_pedidos DESC;
     """)
-    return pd.read_sql(sql_query, conn, params=date_range)
+    return pd.read_sql(sql_query, conn, params={**date_range, "statuses": VALID_SALES_STATUSES})
 
 def _get_todos_clientes(params: dict, date_range: dict, conn) -> pd.DataFrame:
     """Lista todos los clientes del sistema con sus datos básicos y estadísticas de compras"""
@@ -254,13 +283,13 @@ def _get_todos_clientes(params: dict, date_range: dict, conn) -> pd.DataFrame:
             u.is_active as activo,
             u.date_joined as fecha_registro,
             COALESCE(COUNT(DISTINCT p.id), 0) as total_pedidos,
-            COALESCE(SUM(CASE WHEN p.estado IN ('pagado', 'enviado', 'entregado') THEN p.total ELSE 0 END), 0) as total_gastado
+            COALESCE(SUM(CASE WHEN p.estado IN :statuses THEN p.total ELSE 0 END), 0) as total_gastado
         FROM users_user AS u
         LEFT JOIN pedidos_pedido AS p ON u.id = p.cliente_id
         GROUP BY u.id, u.email, u.username, u.first_name, u.last_name, u.celular, u.is_active, u.date_joined
         ORDER BY u.date_joined DESC;
     """)
-    return pd.read_sql(sql_query, conn)
+    return pd.read_sql(sql_query, conn, params={"statuses": VALID_SALES_STATUSES})
 
 def _get_inventario_por_categoria(params: dict, date_range: dict, conn) -> pd.DataFrame:
     """Muestra el inventario agrupado por categoría de productos"""
@@ -370,7 +399,9 @@ def get_report_dataframe(parametros: dict) -> pd.DataFrame:
     
     if df is None or (isinstance(df, pd.DataFrame) and df.empty):
         print(f"Advertencia: La consulta para '{metric}' no devolvió datos.")
-        return pd.DataFrame({"mensaje": ["La consulta no devolvió resultados para este rango de fechas."]})
+        start = date_range.get('start_date', 'N/A') if date_range else 'N/A'
+        end = date_range.get('end_date', 'N/A') if date_range else 'N/A'
+        return pd.DataFrame({"mensaje": [f"No se encontraron datos para '{metric}' en el periodo {start} a {end}."]})
 
     return df
 

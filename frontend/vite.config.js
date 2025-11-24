@@ -11,7 +11,11 @@ export default defineConfig({
   plugins: [react(),
     tailwindcss()
   ],
-  server: {
-    host: true,
-  },
+  host: true,
+    port: 4000,
+    allowedHosts: true, // Permite entrar desde nip.io
+    hmr: {
+        host: 'localhost', // <--- ESTO SE CAMBIA AL DESPLEGAR
+        clientPort: 4000,
+    },
 })

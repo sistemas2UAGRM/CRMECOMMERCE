@@ -8,34 +8,41 @@ from .config import engine
 # --- Carga de Activos (se ejecuta UNA VEZ al iniciar el servidor) ---
 print("Cargando activos de predicción...")
 modelo = None
-df_historico = None
 
-def cargar_datos_historicos_desde_db():
+def cargar_datos_historicos_desde_db(tenant_schema: str = "public"):
     """
-    Carga los datos históricos de ventas desde la base de datos.
-    Consulta la tabla ecommerce_detallepedido y agrupa por fecha.
+    Carga los datos históricos de ventas desde la base de datos para un tenant específico.
+    Consulta la tabla pedidos_detallepedido y agrupa por fecha.
+    
+    Args:
+        tenant_schema: Schema del tenant en PostgreSQL (ej: 'tenant_pepita')
     """
     try:
         if engine is None:
             raise Exception("Motor de base de datos no disponible")
         
-        # Consulta SQL para obtener datos históricos de ventas
-        query = text("""
-            SELECT 
-                DATE(p.fecha_creacion) as fecha_pedido,
-                SUM(dp.cantidad * dp.precio_unitario) as total_ventas
-            FROM pedidos_detallepedido AS dp
-            JOIN pedidos_pedido AS p ON dp.pedido_id = p.id
-            WHERE p.estado IN ('pagado', 'enviado', 'entregado')
-            GROUP BY DATE(p.fecha_creacion)
-            ORDER BY fecha_pedido
-        """)
-        
-        # Ejecutar consulta y convertir a DataFrame
-        df = pd.read_sql(query, engine)
+        # Establecer el search_path para el tenant
+        with engine.connect() as conn:
+            # Configurar el search_path para este tenant
+            conn.execute(text(f"SET search_path TO {tenant_schema}, public"))
+            
+            # Consulta SQL para obtener datos históricos de ventas
+            query = text("""
+                SELECT 
+                    DATE(p.fecha_creacion) as fecha_pedido,
+                    SUM(dp.cantidad * dp.precio_unitario) as total_ventas
+                FROM pedidos_detallepedido AS dp
+                JOIN pedidos_pedido AS p ON dp.pedido_id = p.id
+                WHERE p.estado IN ('pagado', 'enviado', 'entregado')
+                GROUP BY DATE(p.fecha_creacion)
+                ORDER BY fecha_pedido
+            """)
+            
+            # Ejecutar consulta y convertir a DataFrame
+            df = pd.read_sql(query, conn)
         
         if df.empty:
-            print("⚠️  ADVERTENCIA: No hay datos históricos en la base de datos. Usando datos de Excel como respaldo.")
+            print(f"⚠️  ADVERTENCIA: No hay datos históricos para tenant '{tenant_schema}'. Usando datos de Excel como respaldo.")
             return None
         
         # Convertir a formato de serie temporal
@@ -46,34 +53,19 @@ def cargar_datos_historicos_desde_db():
         df = df.resample('D').sum().fillna(0)
         df = df.rename(columns={'total_ventas': 'total_ventas'})
         
-        print(f"✅ Datos históricos cargados desde BD: {len(df)} días, desde {df.index.min()} hasta {df.index.max()}")
+        print(f"✅ Datos históricos cargados desde BD para '{tenant_schema}': {len(df)} días, desde {df.index.min()} hasta {df.index.max()}")
         return df
         
     except Exception as e:
-        print(f"❌ Error al cargar datos desde BD: {e}")
+        print(f"❌ Error al cargar datos desde BD para tenant '{tenant_schema}': {e}")
         return None
 
 try:
-    # 1. Cargar el modelo
+    # Cargar el modelo (el modelo es compartido entre todos los tenants)
     MODEL_PATH = 'modelo/modelo_random_forest.pkl'
     modelo = joblib.load(MODEL_PATH)
     print(f"✅ Modelo cargado exitosamente desde {MODEL_PATH}")
-    
-    # 2. Intentar cargar datos históricos desde la base de datos
-    df_historico = cargar_datos_historicos_desde_db()
-    
-    # 3. Si falla, usar Excel como respaldo
-    if df_historico is None or df_historico.empty:
-        print("📁 Intentando cargar datos desde archivo Excel de respaldo...")
-        DATA_PATH = 'notebooks/dataset_ventas.xlsx'
-        
-        df_trans = pd.read_excel(DATA_PATH)
-        df_trans['InvoiceDate'] = pd.to_datetime(df_trans['InvoiceDate'])
-        df_trans['TotalVenta'] = df_trans['Quantity'] * df_trans['Price']
-        df_historico = df_trans.set_index('InvoiceDate')['TotalVenta'].resample('D').sum().fillna(0)
-        df_historico = df_historico.to_frame(name='total_ventas')
-        
-        print(f"✅ Datos históricos cargados desde Excel ({len(df_historico)} días)")
+    print("ℹ️  Los datos históricos se cargarán dinámicamente por cada tenant")
 
 except FileNotFoundError as e:
     print(f"❌ ERROR CRÍTICO: No se encontró el archivo {e.filename}")
@@ -100,12 +92,33 @@ def crear_features(df):
 
 
 # --- Función de Predicción (El "cerebro" en vivo) ---
-def generar_predicciones(dias_a_predecir: int) -> list:
+def generar_predicciones(dias_a_predecir: int, tenant_schema: str = "public") -> list:
     """
     Genera predicciones futuras día por día (auto-regresivo).
+    
+    Args:
+        dias_a_predecir: Número de días a predecir
+        tenant_schema: Schema del tenant en PostgreSQL
     """
-    if modelo is None or df_historico is None:
-        raise Exception("Los activos (modelo o datos históricos) no están cargados.")
+    if modelo is None:
+        raise Exception("El modelo no está cargado.")
+    
+    # Cargar datos históricos del tenant específico
+    df_historico = cargar_datos_historicos_desde_db(tenant_schema)
+    
+    # Si no hay datos en BD, intentar usar Excel como respaldo (solo para testing)
+    if df_historico is None or df_historico.empty:
+        print("📁 Intentando cargar datos desde archivo Excel de respaldo...")
+        try:
+            DATA_PATH = 'notebooks/dataset_ventas.xlsx'
+            df_trans = pd.read_excel(DATA_PATH)
+            df_trans['InvoiceDate'] = pd.to_datetime(df_trans['InvoiceDate'])
+            df_trans['TotalVenta'] = df_trans['Quantity'] * df_trans['Price']
+            df_historico = df_trans.set_index('InvoiceDate')['TotalVenta'].resample('D').sum().fillna(0)
+            df_historico = df_historico.to_frame(name='total_ventas')
+            print(f"✅ Datos históricos cargados desde Excel ({len(df_historico)} días)")
+        except Exception as e:
+            raise Exception(f"No se pudieron cargar datos históricos para el tenant '{tenant_schema}': {e}")
     
     # Tomamos el historial más reciente (necesitamos al menos 7 días para el 'rolling')
     historial_reciente = df_historico.iloc[-7:].copy()

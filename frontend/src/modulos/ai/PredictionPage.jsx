@@ -35,7 +35,7 @@ export default function PredictionPage() {
     
     const csvContent = [
       ['Fecha', 'Predicción de Ventas'],
-      ...predicciones.predicciones.map(p => [p.fecha, p.prediccion])
+      ...predicciones.predicciones.map(p => [p.fecha, p.prediccion_venta || p.prediccion])
     ].map(row => row.join(',')).join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -49,7 +49,7 @@ export default function PredictionPage() {
   const calcularEstadisticas = () => {
     if (!predicciones || !predicciones.predicciones) return null;
     
-    const valores = predicciones.predicciones.map(p => parseFloat(p.prediccion));
+    const valores = predicciones.predicciones.map(p => parseFloat(p.prediccion_venta || p.prediccion));
     const total = valores.reduce((sum, val) => sum + val, 0);
     const promedio = total / valores.length;
     const maximo = Math.max(...valores);
@@ -207,7 +207,7 @@ export default function PredictionPage() {
                   <Legend />
                   <Area 
                     type="monotone" 
-                    dataKey="prediccion" 
+                    dataKey={(item) => item.prediccion_venta || item.prediccion}
                     stroke="#3B82F6" 
                     strokeWidth={3}
                     fill="url(#colorPrediccion)"
@@ -231,7 +231,7 @@ export default function PredictionPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {predicciones.predicciones && predicciones.predicciones.map((pred, index) => {
-                    const valor = parseFloat(pred.prediccion);
+                    const valor = parseFloat(pred.prediccion_venta || pred.prediccion);
                     const desviacion = ((valor - estadisticas.promedio) / estadisticas.promedio) * 100;
                     return (
                       <tr key={index} className="hover:bg-blue-50 transition-colors">

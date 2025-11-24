@@ -14,14 +14,19 @@ def obtener_rango_fechas(descripcion: str) -> dict:
     start_date, end_date = hoy, hoy  # Por defecto, hoy
 
     # --- Día actual / ayer ---
-    if "hoy" in descripcion or "día actual" in descripcion:
+    if descripcion in ["today", "hoy", "día actual"]:
         start_date = end_date = hoy
-    elif "ayer" in descripcion:
+    elif descripcion in ["yesterday", "ayer"]:
         start_date = end_date = hoy - timedelta(days=1)
 
     # --- Semana actual ---
-    elif "esta semana" in descripcion:
+    elif descripcion in ["this_week", "esta semana"]:
         start_date = hoy - timedelta(days=hoy.weekday())  # Lunes
+        end_date = start_date + timedelta(days=6)
+
+    # --- Semana pasada ---
+    elif descripcion in ["last_week", "semana pasada"]:
+        start_date = hoy - timedelta(days=hoy.weekday() + 7)
         end_date = start_date + timedelta(days=6)
 
     # --- Últimos X días ---
@@ -33,19 +38,19 @@ def obtener_rango_fechas(descripcion: str) -> dict:
             end_date = hoy
 
     # --- Mes actual ---
-    elif "este mes" in descripcion or "mes actual" in descripcion:
+    elif descripcion in ["this_month", "este mes", "mes actual"]:
         start_date = hoy.replace(day=1)
         end_date = date(hoy.year, hoy.month, calendar.monthrange(hoy.year, hoy.month)[1])
 
     # --- Mes pasado ---
-    elif "mes pasado" in descripcion:
+    elif descripcion in ["last_month", "mes pasado"]:
         mes_pasado = hoy.month - 1 or 12
         anio = hoy.year - 1 if hoy.month == 1 else hoy.year
         start_date = date(anio, mes_pasado, 1)
         end_date = date(anio, mes_pasado, calendar.monthrange(anio, mes_pasado)[1])
 
     # --- Trimestre actual ---
-    elif "este trimestre" in descripcion:
+    elif descripcion in ["this_quarter", "este trimestre"]:
         trimestre = (hoy.month - 1) // 3 + 1
         start_mes = 3 * (trimestre - 1) + 1
         start_date = date(hoy.year, start_mes, 1)
@@ -53,9 +58,14 @@ def obtener_rango_fechas(descripcion: str) -> dict:
         end_date = date(hoy.year, end_mes, calendar.monthrange(hoy.year, end_mes)[1])
 
     # --- Año actual ---
-    elif "año actual" in descripcion or "este año" in descripcion:
+    elif descripcion in ["this_year", "año actual", "este año"]:
         start_date = date(hoy.year, 1, 1)
         end_date = date(hoy.year, 12, 31)
+
+    # --- Año pasado ---
+    elif descripcion in ["last_year", "año pasado"]:
+        start_date = date(hoy.year - 1, 1, 1)
+        end_date = date(hoy.year - 1, 12, 31)
 
     return {
         "start_date": start_date.isoformat(),

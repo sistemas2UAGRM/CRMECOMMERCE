@@ -25,30 +25,36 @@ def construir_preambulo_sistema(fecha_actual: str) -> str:
       "filters": {{
          "campo": "valor"
       }},
+      "period": "rango_relativo",
       "date_range": {{
          "start_date": "AAAA-MM-DD",
          "end_date": "AAAA-MM-DD"
       }},
+      "granularity": "day|week|month",
+      "limit": 10,
+      "threshold": 10,
       "group_by": "opcional",
       "format": "json|pdf|excel"
     }}
 
     --- 🧭 REGLAS GENERALES ---
     - Si el usuario no especifica formato, usa "json" por defecto.
-    - Si el usuario pide "este mes", "mes actual" o "hoy", usa la fecha actual ({fecha_actual}).
-    - Si el usuario pide "mes pasado", calcula el mes anterior completo.
-    - Si menciona un mes sin año (ej: "octubre"), asume que es del año actual (2025).
-    - Si pide “últimos X días”, calcula el rango dinámicamente.
+    - NO calcules fechas exactas para términos relativos. Usa el campo "period".
+      - "hoy" -> "today"
+      - "ayer" -> "yesterday"
+      - "esta semana" -> "this_week"
+      - "semana pasada" -> "last_week"
+      - "este mes" -> "this_month"
+      - "mes pasado" -> "last_month"
+      - "este año" -> "this_year"
+      - "año pasado" -> "last_year"
+    - Si el usuario da fechas específicas (ej: "del 1 al 15 de octubre"), usa "period": "custom" y llena "date_range".
+    - Si pide "ventas diarias", "por día" -> "granularity": "day"
+    - Si pide "ventas semanales" -> "granularity": "week"
+    - Si pide "ventas mensuales" -> "granularity": "month"
+    - Si pide "top X productos" -> "limit": X
+    - Si pide "stock menor a X" -> "threshold": X
     - El resultado debe ser SIEMPRE un JSON válido sin texto adicional.
-    - "hoy" o "día actual" → fecha: {fecha_actual}
-    - "ayer" → fecha: (un día antes de {fecha_actual})
-    - "esta semana" → lunes a domingo de la semana actual.
-    - "últimos X días" → calcula dinámicamente.
-    - "este mes" → del 1 al último día del mes actual.
-    - "mes pasado" → mes anterior completo.
-    - "este trimestre" → enero-marzo, abril-junio, etc.
-    - "año actual" → del 1 enero al 31 diciembre de 2025.
-    - Si no se especifica fecha, usa mes actual.
 
     --- 📊 MÉTRICAS DISPONIBLES ---
     🔸 **Ventas** (requieren date_range)
@@ -82,7 +88,7 @@ def construir_preambulo_sistema(fecha_actual: str) -> str:
     Usuario: "ventas totales del mes pasado en excel"
     {{
       "metric": "ventas_totales",
-      "date_range": {{"start_date": "2025-10-01", "end_date": "2025-10-31"}},
+      "period": "last_month",
       "format": "excel"
     }}
 
@@ -90,15 +96,17 @@ def construir_preambulo_sistema(fecha_actual: str) -> str:
     {{
       "metric": "clientes_frecuentes",
       "group_by": "sucursal",
-      "date_range": {{"start_date": "2025-11-01", "end_date": "2025-11-30"}},
+      "period": "this_month",
       "format": "json"
     }}
 
-    Usuario: "productos con stock bajo"
+    Usuario: "productos con stock bajo (menos de 5)"
     {{
       "metric": "inventario_bajo",
+      "threshold": 5,
       "format": "json"
     }}
+    """
 
     Usuario: "dame los clientes que tiene el sistema en pdf"
     {{
@@ -155,10 +163,16 @@ def analizar_prompt_usuario(user_prompt: str) -> dict:
         metrics_sin_fecha = ['stock_actual', 'inventario_bajo', 'todos_clientes', 
                             'lista_clientes', 'clientes_sistema', 'inventario_por_categoria']
 
-        # Procesamos el rango de fechas relativo solo si existe y no es una métrica sin fecha
-        if parsed.get("metric") not in metrics_sin_fecha and isinstance(parsed.get("date_range"), dict):
+        # Procesamos el rango de fechas relativo
+        period = parsed.get("period")
+        if period and period != "custom":
+            parsed["date_range"] = obtener_rango_fechas(period)
+        
+        # Fallback: si no hay period pero hay date_range (legacy o custom)
+        elif isinstance(parsed.get("date_range"), dict):
             start = parsed["date_range"].get("start_date", "")
             end = parsed["date_range"].get("end_date", "")
+            # Si detectamos palabras clave en las fechas (alucinación del LLM), recalculamos
             if any(x in (start + end).lower() for x in ["hoy", "mes", "semana", "trimestre", "últimos", "año", "ayer"]):
                 parsed["date_range"] = obtener_rango_fechas(start or end)
 

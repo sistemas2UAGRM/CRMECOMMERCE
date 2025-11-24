@@ -1,3 +1,4 @@
+import os  # <--- Importante para leer el .env
 from rest_framework import serializers
 from django.db import transaction
 from .models import Client, Domain
@@ -39,16 +40,28 @@ class TenantRegisterSerializer(serializers.Serializer):
                 name=tienda_name
             )
 
-            # 2. Crear el Dominio asociado
-            # IMPORTANTE: Ajustar según tu entorno (localhost o producción)
-            domain_url = f"{schema_name}.localhost" # Para desarrollo
-            # domain_url = f"{schema_name}.tudominio.com" # Para producción
+            # ==========================================================
+            # 2. Crear el Dominio asociado (MODIFICADO PARA .ENV)
+            # ==========================================================
+            
+            # Intentamos leer la IP del servidor desde las variables de entorno
+            server_ip = os.getenv('SERVER_IP')
+
+            # Si no existe la variable (ej. desarrollo local sin .env), usamos localhost
+            if not server_ip:
+                server_ip = '127.0.0.1'
+                print("⚠️ ADVERTENCIA: No se encontró SERVER_IP en .env, usando 127.0.0.1")
+
+            # Construimos la URL dinámica usando nip.io
+            # Ejemplo resultado: pepita.54.200.10.20.nip.io
+            domain_url = f"{schema_name}.{server_ip}.nip.io"
             
             Domain.objects.create(
                 domain=domain_url,
                 tenant=tenant,
                 is_primary=True
             )
+            # ==========================================================
 
             # 3. Crear el Usuario Admin DENTRO del nuevo esquema
             # Usamos tenant_context para cambiar temporalmente a la nueva BD
@@ -56,7 +69,7 @@ class TenantRegisterSerializer(serializers.Serializer):
             from django.contrib.auth.models import Group
 
             with tenant_context(tenant):
-                # Estamos ahora en el esquema 'pepita'
+                # Estamos ahora en el esquema nuevo
                 user = User.objects.create_user(
                     email=validated_data['email'],
                     username=validated_data['email'], # Username igual a email
