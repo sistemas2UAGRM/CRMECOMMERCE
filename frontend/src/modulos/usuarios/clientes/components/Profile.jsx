@@ -1,5 +1,4 @@
-//src/modulos/usuarios/clientes/components/Profile.jsx
-import React from 'react';
+//frontend/src/modulos/usuarios/clientes/components/Profile.jsx
 
 const Profile = () => {
   return (

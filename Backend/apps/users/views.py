@@ -1,4 +1,4 @@
-# apps/users/views.py
+# backend/apps/users/views.py
 """
 Views (DRF) para la app users:
 - Registro público (dispara envío de email de verificación)
@@ -8,7 +8,6 @@ Views (DRF) para la app users:
 - ViewSet para CRUD de usuarios (administración)
 - Gestión de direcciones (ya incluida)
 """
-
 import uuid
 from django.utils import timezone
 from django.contrib.auth import get_user_model

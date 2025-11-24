@@ -1,4 +1,4 @@
-// src/modulos/productos/hooks/useCategorias.js
+// frontend/src/modulos/productos/hooks/useCategorias.js
 import { useState, useEffect } from "react";
 import categoriasService from "../../../services/categoriasService";
 

@@ -1,4 +1,4 @@
-// src/components/MenuHorizontal.jsx 
+// frontend/src/components/MenuHorizontal.jsx
 import React from 'react';
 
 // Recibe los items, el item activo actual y una función para cambiarlo

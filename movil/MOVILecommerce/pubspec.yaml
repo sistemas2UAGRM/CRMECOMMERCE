@@ -1,0 +1,62 @@
+name: movil_ecommerce
+description: "A Flutter e-commerce mobile application"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Gestión de estado
+  provider: ^6.1.1
+
+  # Navegación
+  go_router: ^13.0.0
+
+  # HTTP Client
+  dio: ^5.4.0
+
+  # Almacenamiento seguro
+  flutter_secure_storage: ^9.0.0
+
+  # Almacenamiento local
+  shared_preferences: ^2.2.2
+
+  # Pagos (Stripe)
+  flutter_stripe: ^12.1.1
+
+  # Firebase (solo Core para configuración básica, si es necesario)
+  firebase_core: ^2.24.2
+  # SWAGGER-CORRECTED: firebase_messaging ELIMINADO (no hay endpoint /users/fcm-token/)
+
+  # UI/Icons
+  cupertino_icons: ^1.0.2
+  shimmer: ^3.0.0
+  flutter_dotenv: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets (descomentar cuando agregues imágenes)
+  assets:
+    - .env
+  #   - assets/images/
+  #   - assets/icons/
+
+  # Fonts (descomentar si agregas fuentes personalizadas)
+  # fonts:
+  #   - family: CustomFont
+  #     fonts:
+  #       - asset: fonts/CustomFont-Regular.ttf
+  #       - asset: fonts/CustomFont-Bold.ttf
+  #         weight: 700

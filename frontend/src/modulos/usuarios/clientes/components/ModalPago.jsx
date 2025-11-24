@@ -1,3 +1,4 @@
+// frontend/src/modulos/usuarios/clientes/components/ModalPago.jsx
 import React, { useState } from 'react';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';

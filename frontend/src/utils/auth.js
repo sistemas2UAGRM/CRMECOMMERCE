@@ -1,4 +1,4 @@
-// src/utils/auth.js
+// frontend/src/utils/auth.js
 const TOKEN_KEY = 'token';
 const REFRESH_KEY = 'refreshToken';
 const LEGACY_ACCESS = 'accessToken';

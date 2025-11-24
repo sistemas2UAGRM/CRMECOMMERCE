@@ -1,4 +1,4 @@
-// src/components/RequireAuth.jsx
+// frontend/src/components/RequireAuth.jsx
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { getAuthToken, getUser, clearAuthTokens } from '../utils/auth';

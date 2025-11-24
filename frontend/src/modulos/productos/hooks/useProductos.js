@@ -1,4 +1,4 @@
-// src/MODULOS/PRODUCTOS/hooks/useProductos.js
+// frontend/src/modulos/productos/hooks/useProductos.js
 import { useContext } from "react";
 import { ProductosContext } from "../context/ProductosContext";
 

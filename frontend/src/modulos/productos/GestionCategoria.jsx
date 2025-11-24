@@ -1,4 +1,4 @@
-// src/modulos/productos/GestionCategorias.jsx
+// frontend/src/modulos/productos/GestionCategoria.jsx
 import React, { useState, useEffect } from "react";
 import { useCategorias } from "./hooks/useCategorias";
 import Modal from "./Modal";

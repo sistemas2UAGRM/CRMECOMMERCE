@@ -1,10 +1,10 @@
-// src/pages/DashAdmin.jsx
+// frontend/src/components/dashadmin.jsx
 import React, { useState, useEffect, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search, Bell, HelpCircle, Settings, User,
   Users, UserCheck, FileText, Shield, Package, ShoppingCart,
-  CreditCard, Handshake, BarChart2, Bot, ClipboardList, LogOut,
+  CreditCard, Handshake, BarChart2, Bot, ClipboardList, LogOut, BookOpen,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -18,6 +18,10 @@ import Almacenes from "../modulos/productos/almacenes/GestionAlmacenes";
 
 import Empleados from "../modulos/empleados";
 import GestionCarritos from "../modulos/carrito/GestionCarritos";
+import GestionCalendario from "../modulos/crm/calendario/GestionCalendario";
+import GestionClientes from "../modulos/crm/clientes/GestionClientes";
+import GestionPreventa from "../modulos/crm/crm_preventa/GestionPreventa";
+import GestionSoporte from "../modulos/crm/soporte/GestionSoporte";
 import Bitacora from "./Bitacora";
 import UserProfile from "./UserProfile";
 
@@ -25,6 +29,11 @@ import api from "../services/api";
 import { getRefreshToken, clearAuthTokens } from "../utils/auth";
 
 import GestionUsuarios from "../modulos/usuarios/admin/GestionUsuarios";
+
+// Módulo de IA
+import ReportPage from "../modulos/ai/ReportPage";
+import PredictionPage from "../modulos/ai/PredictionPage";
+import ManualAdmin from "../modulos/manual/ManualAdmin";
 
 const sidebarItems = [
   { name: "Usuarios", icon: <Users size={22} />, component: <GestionUsuarios /> },
@@ -43,16 +52,30 @@ const sidebarItems = [
   { name: "Carritos Activos", icon: <ShoppingCart size={22} />, component: <GestionCarritos /> },
   // { name: "Pedidos", icon: <ClipboardList size={22} />, component: <div>Contenido de Pedidos</div> },
   // { name: "Pagos", icon: <CreditCard size={22} />, component: <div>Contenido de Pagos</div> },
-  // { name: "CRM", icon: <Handshake size={22} />, component: <div>Contenido de CRM</div> },
-  // { name: "Reportes", icon: <BarChart2 size={22} />, component: <div>Contenido de Reportes</div> },
-  // { name: "IA", icon: <Bot size={22} />, component: <div>Contenido de IA</div> },
+  {
+    name: "CRM", icon: <Handshake size={22} />, component: <div>CRM Dashboard Overview</div>,
+    subMenu: [
+      { name: "Calendario", component: <GestionCalendario /> },
+      { name: "Clientes", component: <GestionClientes /> },
+      { name: "Preventa", component: <GestionPreventa /> },
+      { name: "Soporte", component: <GestionSoporte /> },
+    ],
+  },
+  {
+    name: "IA", icon: <Bot size={22} />, component: <div>Módulo de Inteligencia Artificial</div>,
+    subMenu: [
+      { name: "Predicciones", component: <PredictionPage /> },
+      { name: "Reportes", component: <ReportPage /> },
+    ],
+  },
+  { name: "Manual", icon: <BookOpen size={22} />, component: <ManualAdmin /> },
 ];
 
 /* ------------------ Loader simple (para Suspense) ------------------ */
 function Loader() {
   return (
     <div className="flex items-center justify-center h-40">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2e7e8b]" />
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600" />
       <span className="ml-3 text-sm text-slate-600">Cargando...</span>
     </div>
   );
@@ -134,7 +157,7 @@ export default function DashAdmin() {
       <aside
         id="sidebar-main"
         className={`
-          fixed top-0 left-0 z-40 h-full w-64 bg-[#2e7e8b] text-white flex flex-col py-6 transform transition-transform duration-300
+          fixed top-0 left-0 z-40 h-full w-64 bg-primary-600 text-white flex flex-col py-6 transform transition-transform duration-300
           md:static md:translate-x-0 md:w-56 md:flex md:flex-col
           ${sidebarAbierto ? 'translate-x-0' : '-translate-x-full'}
         `}
@@ -192,7 +215,7 @@ export default function DashAdmin() {
           <button
             onClick={handleLogout}
             title="Cerrar Sesión"
-            className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#2e7e8b] focus:ring-white text-gray-200 hover:bg-red-600 hover:text-white"
+            className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-600 focus:ring-white text-gray-200 hover:bg-red-600 hover:text-white"
           >
             <LogOut size={22} />
             <span>Cerrar Sesión</span>
@@ -232,17 +255,17 @@ export default function DashAdmin() {
                 <input
                   type="text"
                   placeholder="Buscar en toda la app..."
-                  className="w-full max-w-xs rounded-full border px-4 py-2 pl-10 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2e7e8b]"
+                  className="w-full max-w-xs rounded-full border px-4 py-2 pl-10 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               </div>
 
               <div className="flex items-center space-x-2 sm:space-x-4 text-gray-600">
-                <HelpCircle className="h-6 w-6 cursor-pointer hover:text-[#2e7e8b]" />
-                <Settings className="h-6 w-6 cursor-pointer hover:text-[#2e7e8b]" />
-                <Bell className="h-6 w-6 cursor-pointer hover:text-[#2e7e8b]" />
+                <HelpCircle className="h-6 w-6 cursor-pointer hover:text-primary-600" />
+                <Settings className="h-6 w-6 cursor-pointer hover:text-primary-600" />
+                <Bell className="h-6 w-6 cursor-pointer hover:text-primary-600" />
                 <User
-                  className="h-7 w-7 cursor-pointer hover:text-[#2e7e8b] transition-colors"
+                  className="h-7 w-7 cursor-pointer hover:text-primary-600 transition-colors"
                   onClick={handleShowProfile}
                   title="Mi Perfil"
                 />

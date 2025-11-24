@@ -1,4 +1,4 @@
-// src/modulos/productos/CategoriaForm.jsx
+// frontend/src/modulos/productos/CategoriaForm.jsx
 import React, { useState, useEffect } from "react";
 
 export default function CategoriaForm({ categoriaInicial = null, onSubmit, onCancelar }) {

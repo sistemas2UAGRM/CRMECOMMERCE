@@ -1,4 +1,4 @@
-// src/services/authService.js (NUEVO)
+// frontend/src/services/authService.js
 import api from './api';
 import { setAuthTokens, clearAuthTokens, setUser } from '../utils/auth';
 

@@ -1,4 +1,4 @@
-// src/modulos/usuarios/clientes/ProductoLista.jsx
+// frontend/src/modulos/usuarios/clientes/components/ProductoLista.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import productosService from '../../../../services/productosService'; // ¡Importa tu servicio!

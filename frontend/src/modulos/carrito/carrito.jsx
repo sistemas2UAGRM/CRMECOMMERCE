@@ -1,4 +1,4 @@
-// src/modulos/carrito/Carrito.jsx
+// frontend/src/modulos/carrito/carrito.jsx
 import React, { useEffect, useState } from "react";
 import {
   ShoppingCart, Plus, Minus, Trash2, Package2,

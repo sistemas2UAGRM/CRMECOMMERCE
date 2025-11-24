@@ -1,3 +1,4 @@
+# backend/apps/ecommerce/carritos/apps.py
 from django.apps import AppConfig
 
 

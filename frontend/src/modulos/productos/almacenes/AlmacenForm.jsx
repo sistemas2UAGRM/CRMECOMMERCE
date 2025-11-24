@@ -1,3 +1,4 @@
+// frontend/src/modulos/productos/almacenes/AlmacenForm.jsx
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 

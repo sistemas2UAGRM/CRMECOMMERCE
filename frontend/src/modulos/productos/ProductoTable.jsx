@@ -1,4 +1,4 @@
-// src/modulos/productos/ProductoTable.jsx
+// frontend/src/modulos/productos/ProductoTable.jsx
 import React from "react";
 
 /*

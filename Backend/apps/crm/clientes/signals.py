@@ -2,6 +2,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
+from django.db import connection
 from .models import Cliente
 
 from apps.ecommerce.pedidos.models import Pedido
@@ -14,6 +15,8 @@ def crear_perfil_cliente(sender, instance, created, **kwargs):
     crea un nuevo CustomUser.
     """
     if created:
+        if connection.schema_name == 'public':
+            return
         Cliente.objects.create(usuario=instance)
 
 @receiver(post_save, sender=Pedido)
@@ -27,10 +30,10 @@ def actualizar_perfil_cliente(sender, instance, **kwargs):
     
     # Verificamos si el pedido se acaba de marcar como pagado
     # (o el estado que uses para "completado")
-    if pedido.estado == Pedido.EstadoPedido.PAGADO and pedido.usuario:
+    if pedido.estado == Pedido.ESTADO_PAGADO and pedido.cliente:
         # Usamos 'get' porque el signal 'crear_perfil_cliente'
         # asegura que el perfil siempre exista.
-        cliente_perfil = Cliente.objects.get(usuario=pedido.usuario)
+        cliente_perfil = Cliente.objects.get(usuario=pedido.cliente)
         
         # Llamamos al método que definimos en el modelo
         cliente_perfil.recalcular_estadisticas()

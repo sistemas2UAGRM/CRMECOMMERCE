@@ -1,4 +1,4 @@
-// src/modulos/productos/Dashboard.jsx
+// frontend/src/components/dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -111,8 +111,8 @@ export default function Dashboard() {
             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-[#2e7e8b]">Características</a>
             <a href="#plans" className="text-sm font-medium text-slate-600 hover:text-[#2e7e8b]">Planes</a>
             <a href="#testimonials" className="text-sm font-medium text-slate-600 hover:text-[#2e7e8b]">Testimonios</a>
-            <Link to="/login" className="ml-4 inline-flex items-center gap-2 bg-[#f0a831] text-white px-4 py-2 rounded-full font-semibold hover:shadow-lg">
-              Iniciar sesión <ArrowRight className="w-4 h-4" />
+            <Link to="/registro" className="ml-4 inline-flex items-center gap-2 bg-[#f0a831] text-white px-4 py-2 rounded-full font-semibold hover:shadow-lg">
+              Inicia una prueba gratuita <ArrowRight className="w-4 h-4" />
             </Link>
           </nav>
 
@@ -135,8 +135,8 @@ export default function Dashboard() {
               <a href="#features" onClick={() => setMenuOpen(false)} className="py-2 font-medium text-slate-700">Características</a>
               <a href="#plans" onClick={() => setMenuOpen(false)} className="py-2 font-medium text-slate-700">Planes</a>
               <a href="#testimonials" onClick={() => setMenuOpen(false)} className="py-2 font-medium text-slate-700">Testimonios</a>
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="mt-2 inline-block bg-[#f0a831] text-white px-4 py-2 rounded-full text-center font-semibold">
-                Iniciar sesión
+              <Link to="/registro" onClick={() => setMenuOpen(false)} className="mt-2 inline-block bg-[#f0a831] text-white px-4 py-2 rounded-full text-center font-semibold">
+                Inicia una prueba gratuita
               </Link>
             </div>
           </div>

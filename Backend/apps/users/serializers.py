@@ -32,7 +32,7 @@ class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         # Campos mínimos a exponer en listados públicos/administrativos
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'is_active', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'is_active', 'is_staff', 'date_joined']
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip()
@@ -270,11 +270,11 @@ class UserSignupSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """
         Representación personalizada para la respuesta de registro.
-        Indica al cliente que revise su email.
+        Usuario activo inmediatamente (sin verificación de email).
         """
         data = super().to_representation(instance)
-        data['verification_email_sent'] = True
-        data['message'] = "Registro exitoso. Revisa tu email para verificar tu cuenta."
+        data['verification_email_sent'] = False
+        data['message'] = "Registro exitoso. Tu cuenta está activa y lista para usar."
         return data
 
 
@@ -395,10 +395,10 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Credenciales inválidas.', code='authorization')
         if not user.is_active:
             raise serializers.ValidationError('Cuenta desactivada.', code='authorization')
-        # Comentado temporalmente para desarrollo - descomentar en producción
+        # Verificación de email deshabilitada temporalmente para desarrollo
         # if not user.is_verified:
         #     raise serializers.ValidationError(
-        #         'Esta cuenta no ha sido verificada. Revisa tu email.', 
+        #         'Esta cuenta no ha sido verificada. Revisa tu email.',
         #         code='authorization'
         #     )
         
@@ -419,8 +419,8 @@ class UserAdminListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 
-                  'last_name', 'is_active', 'role', 'fecha_de_nacimiento',
-                  'sexo', 'celular', 'is_verified'
+                  'last_name', 'is_active', 'is_staff', 'role', 'fecha_de_nacimiento',
+                  'sexo', 'celular'
         ]
 
     def get_role(self, obj):

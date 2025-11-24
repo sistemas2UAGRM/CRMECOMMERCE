@@ -1,4 +1,4 @@
-//src/modulos/usuarios/clientes/components/Sidebar.jsx
+//frontend/src/modulos/usuarios/clientes/components/Sidebar.jsx
 import React, { useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { User, ShoppingCart, Package, Settings, LogOut, X } from 'lucide-react';

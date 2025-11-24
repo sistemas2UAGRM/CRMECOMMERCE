@@ -1,3 +1,4 @@
+// frontend/src/services/pedidosService.js
 import api from './api';
 
 const pedidosService = {

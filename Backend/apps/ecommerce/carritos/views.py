@@ -83,7 +83,16 @@ class CarritoViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['post'])
     @transaction.atomic
     def crear_pedido(self, request):
-        """Convierte el carrito actual en un nuevo pedido."""
+        """
+        Convierte el carrito actual en un nuevo pedido.
+        
+        Body esperado:
+        {
+            "metodo_pago": "tarjeta",  // opcional: 'tarjeta', 'transferencia', 'efectivo', 'paypal'
+            "direccion_envio": "Calle Principal 123, Ciudad",  // opcional
+            "comentario": "Dejar en portería"  // opcional
+        }
+        """
         carrito = self.get_object()
         if not carrito.items.exists():
             return Response({'error': 'El carrito está vacío.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -92,11 +101,13 @@ class CarritoViewSet(viewsets.ViewSet):
         import uuid
         codigo_pedido = f"PED-{uuid.uuid4().hex[:8].upper()}"
 
-        # 2. Crear el Pedido
+        # 2. Crear el Pedido con los datos del body
         pedido = Pedido.objects.create(
             codigo=codigo_pedido,
             cliente=request.user,
-            direccion_envio=request.data.get('direccion_envio', '')
+            metodo_pago=request.data.get('metodo_pago', None),
+            direccion_envio=request.data.get('direccion_envio', ''),
+            comentario=request.data.get('comentario', None)
         )
 
         # 3. Mover items del carrito a detalles de pedido y reservar stock

@@ -1,4 +1,4 @@
-// src/modulos/productos/context/ProductosContext.jsx
+// frontend/src/modulos/productos/context/ProductosContext.jsx
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import productosService from "../../../services/productosService";
 
